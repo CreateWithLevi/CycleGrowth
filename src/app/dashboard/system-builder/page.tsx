@@ -1,0 +1,38 @@
+import DashboardNavbar from "@/components/dashboard-navbar";
+import SystemBuilder from "@/components/system-builder";
+import { createClient } from "../../../../supabase/server";
+import { redirect } from "next/navigation";
+import { SubscriptionCheck } from "@/components/subscription-check";
+
+export default async function SystemBuilderPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/sign-in");
+  }
+
+  return (
+    <SubscriptionCheck>
+      <DashboardNavbar />
+      <main className="w-full bg-gray-50 min-h-screen py-8">
+        <div className="container mx-auto px-4">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">
+              Create Your Growth System
+            </h1>
+            <p className="text-gray-600">
+              Design a personalized framework to guide your growth journey
+              through planning, execution, analysis, and improvement.
+            </p>
+          </div>
+
+          <SystemBuilder />
+        </div>
+      </main>
+    </SubscriptionCheck>
+  );
+}
