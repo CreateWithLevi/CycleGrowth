@@ -44,6 +44,7 @@ import {
   createOrUpdateUserCycloEvolution,
 } from "@/lib/db";
 import { formatDistanceToNow } from "date-fns";
+import { CycloStage } from "@/components/cyclo-evolution-stages";
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -173,10 +174,10 @@ export default async function Dashboard() {
                 description={currentCycle.description || ""}
                 currentPhase={
                   currentCycle.current_phase as
-                    | "planning"
-                    | "execution"
-                    | "analysis"
-                    | "improvement"
+                  | "planning"
+                  | "execution"
+                  | "analysis"
+                  | "improvement"
                 }
                 startDate={new Date(
                   currentCycle.start_date,
@@ -248,13 +249,13 @@ export default async function Dashboard() {
       </main>
 
       {/* Cyclo Assistant */}
-      <CycloAssistant stage={cycloEvolution?.current_stage || 1} />
+      <CycloAssistant stage={(cycloEvolution?.current_stage || 1) as CycloStage} />
 
       {/* Cyclo Insights Panel - Only show if there's an active cycle */}
       {currentCycle && (
         <div className="fixed bottom-24 right-6 w-80 sm:w-96">
           <CycloInsightsPanel
-            stage={cycloEvolution?.current_stage || 1}
+            stage={(cycloEvolution?.current_stage || 1) as CycloStage}
             domain={currentCycle.domain}
             phase={currentCycle.current_phase}
           />

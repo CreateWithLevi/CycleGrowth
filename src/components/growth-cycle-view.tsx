@@ -12,10 +12,29 @@ import {
   ArrowRight,
   Check,
   Clock,
+  Plus,
 } from "lucide-react";
 
+interface Task {
+  id: number;
+  title: string;
+  completed: boolean;
+  phase: string;
+}
+
+interface GrowthSystem {
+  name: string;
+  description: string;
+  domain: string;
+  currentPhase: string;
+  progress: number;
+  startDate: string;
+  goals: string[];
+  tasks: Task[];
+}
+
 interface GrowthCycleViewProps {
-  system?: any;
+  system?: GrowthSystem;
   defaultPhase?: "planning" | "execution" | "analysis" | "improvement";
 }
 
@@ -75,7 +94,7 @@ export default function GrowthCycleView({
   defaultPhase = "planning",
 }: GrowthCycleViewProps) {
   const [activePhase, setActivePhase] = useState<string>(defaultPhase);
-  const [tasks, setTasks] = useState(system.tasks);
+  const [tasks, setTasks] = useState<Task[]>(system.tasks);
 
   const phaseProgress = {
     planning: 25,
@@ -86,7 +105,7 @@ export default function GrowthCycleView({
 
   const toggleTaskCompletion = (taskId: number) => {
     setTasks(
-      tasks.map((task) =>
+      tasks.map((task: Task) =>
         task.id === taskId ? { ...task, completed: !task.completed } : task,
       ),
     );
@@ -162,7 +181,7 @@ export default function GrowthCycleView({
                   <span className="font-medium">
                     {
                       phaseProgress[
-                        system.currentPhase as keyof typeof phaseProgress
+                      system.currentPhase as keyof typeof phaseProgress
                       ]
                     }
                     %

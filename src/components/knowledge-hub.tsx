@@ -14,27 +14,33 @@ import {
   Link as LinkIcon,
   Tag,
   X,
+  Loader2,
 } from "lucide-react";
+import { useToast } from "./ui/use-toast";
 
 interface KnowledgeItem {
   id: string;
   title: string;
   content: string;
-  tags: string[];
-  connections: string[];
-  createdAt: string;
   source?: string;
+  created_at: string;
+  knowledge_tags: { tag: string }[];
+  knowledge_connections: { target_id: string }[];
 }
 
 export default function KnowledgeHub() {
   const [activeTab, setActiveTab] = useState("browse");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
   const [newNote, setNewNote] = useState({
     title: "",
     content: "",
     tags: [""],
-    connections: [],
+    connections: [] as string[],
+    source: "",
   });
 
   // Sample knowledge items
@@ -44,9 +50,13 @@ export default function KnowledgeHub() {
       title: "Effective Public Speaking Techniques",
       content:
         "Research shows that the most effective public speakers use a combination of storytelling, pauses for emphasis, and varied vocal tones to engage their audience.",
-      tags: ["communication", "public speaking", "leadership"],
-      connections: ["2"],
-      createdAt: "2023-06-20T14:30:00Z",
+      knowledge_tags: [
+        { tag: "communication" },
+        { tag: "public speaking" },
+        { tag: "leadership" },
+      ],
+      knowledge_connections: [{ target_id: "2" }],
+      created_at: "2023-06-20T14:30:00Z",
       source: "Professional Skill Development cycle",
     },
     {
@@ -54,9 +64,13 @@ export default function KnowledgeHub() {
       title: "Active Listening Framework",
       content:
         "Active listening involves five key steps: paying attention, showing that you're listening, providing feedback, deferring judgment, and responding appropriately.",
-      tags: ["communication", "listening", "interpersonal"],
-      connections: ["1"],
-      createdAt: "2023-06-25T09:15:00Z",
+      knowledge_tags: [
+        { tag: "communication" },
+        { tag: "listening" },
+        { tag: "interpersonal" },
+      ],
+      knowledge_connections: [{ target_id: "1" }],
+      created_at: "2023-06-25T09:15:00Z",
       source: "Professional Skill Development cycle",
     },
     {
@@ -64,16 +78,20 @@ export default function KnowledgeHub() {
       title: "Growth Mindset Principles",
       content:
         "A growth mindset, coined by Carol Dweck, is the belief that abilities can be developed through dedication and hard work. This view creates a love of learning and resilience essential for achievement.",
-      tags: ["mindset", "psychology", "learning"],
-      connections: [],
-      createdAt: "2023-07-02T11:45:00Z",
+      knowledge_tags: [
+        { tag: "mindset" },
+        { tag: "psychology" },
+        { tag: "learning" },
+      ],
+      knowledge_connections: [],
+      created_at: "2023-07-02T11:45:00Z",
       source: "Learning Spanish cycle",
     },
   ]);
 
   // All unique tags from knowledge items
   const allTags = Array.from(
-    new Set(knowledgeItems.flatMap((item) => item.tags)),
+    new Set(knowledgeItems.flatMap((item) => item.knowledge_tags?.map((t) => t.tag) || [])),
   );
 
   // Filter knowledge items based on search and tags
@@ -83,9 +101,10 @@ export default function KnowledgeHub() {
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.content.toLowerCase().includes(searchQuery.toLowerCase());
 
+    const itemTags = item.knowledge_tags?.map((t) => t.tag) || [];
     const matchesTags =
       selectedTags.length === 0 ||
-      selectedTags.every((tag) => item.tags.includes(tag));
+      selectedTags.every((tag) => itemTags.includes(tag));
 
     return matchesSearch && matchesTags;
   });
@@ -119,24 +138,56 @@ export default function KnowledgeHub() {
   };
 
   // Handle saving a new note
-  const handleSaveNote = () => {
-    const newItem: KnowledgeItem = {
-      id: (knowledgeItems.length + 1).toString(),
-      title: newNote.title,
-      content: newNote.content,
-      tags: newNote.tags.filter((tag) => tag.trim() !== ""),
-      connections: newNote.connections,
-      createdAt: new Date().toISOString(),
-    };
+  const handleSaveNote = async () => {
+    if (!newNote.title || !newNote.content) {
+      toast({
+        title: "Error",
+        description: "Title and content are required",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setKnowledgeItems([...knowledgeItems, newItem]);
-    setNewNote({
-      title: "",
-      content: "",
-      tags: [""],
-      connections: [],
-    });
-    setActiveTab("browse");
+    setIsLoading(true);
+    try {
+      const newItem: KnowledgeItem = {
+        id: (knowledgeItems.length + 1).toString(),
+        title: newNote.title,
+        content: newNote.content,
+        knowledge_tags: newNote.tags
+          .filter((tag) => tag.trim() !== "")
+          .map((tag) => ({ tag })),
+        knowledge_connections: newNote.connections.map((id) => ({
+          target_id: id,
+        })),
+        created_at: new Date().toISOString(),
+        source: newNote.source || undefined,
+      };
+
+      setKnowledgeItems([...knowledgeItems, newItem]);
+      setNewNote({
+        title: "",
+        content: "",
+        tags: [""],
+        connections: [],
+        source: "",
+      });
+      setActiveTab("browse");
+
+      toast({
+        title: "Success",
+        description: "Knowledge item created successfully",
+      });
+    } catch (error) {
+      console.error("Error creating knowledge item:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create knowledge item",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Toggle tag selection for filtering
@@ -219,7 +270,7 @@ export default function KnowledgeHub() {
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-semibold">{item.title}</h3>
                       <div className="text-xs text-gray-500">
-                        {new Date(item.createdAt).toLocaleDateString()}
+                        {new Date(item.created_at).toLocaleDateString()}
                       </div>
                     </div>
                     <p className="text-gray-700 mb-3">{item.content}</p>
@@ -231,22 +282,22 @@ export default function KnowledgeHub() {
                     )}
 
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {item.tags.map((tag) => (
+                      {item.knowledge_tags.map((tag) => (
                         <span
-                          key={tag}
+                          key={tag.tag}
                           className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs"
                         >
-                          {tag}
+                          {tag.tag}
                         </span>
                       ))}
                     </div>
 
-                    {item.connections.length > 0 && (
+                    {item.knowledge_connections.length > 0 && (
                       <div className="flex items-center gap-2 text-sm text-purple-600">
                         <LinkIcon className="h-4 w-4" />
                         <span>
-                          {item.connections.length} connection
-                          {item.connections.length !== 1 ? "s" : ""}
+                          {item.knowledge_connections.length} connection
+                          {item.knowledge_connections.length !== 1 ? "s" : ""}
                         </span>
                       </div>
                     )}
@@ -367,10 +418,17 @@ export default function KnowledgeHub() {
               </Button>
               <Button
                 onClick={handleSaveNote}
-                disabled={!newNote.title || !newNote.content}
+                disabled={isLoading || !newNote.title || !newNote.content}
                 className="bg-purple-600 hover:bg-purple-700"
               >
-                Save Note
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>Save Note</>
+                )}
               </Button>
             </div>
           </TabsContent>

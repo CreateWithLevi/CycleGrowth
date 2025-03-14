@@ -29,6 +29,10 @@ interface ReflectionEntry {
   reflection_tags: { tag: string }[];
 }
 
+interface ApiError {
+  message: string;
+}
+
 export default function ReflectionToolConnected() {
   const [activeTab, setActiveTab] = useState("new");
   const [newTag, setNewTag] = useState("");
@@ -156,7 +160,7 @@ export default function ReflectionToolConnected() {
       } else {
         toast({
           title: "Error",
-          description: error?.message || "Failed to create reflection",
+          description: (error as ApiError)?.message || "Failed to create reflection",
           variant: "destructive",
         });
       }

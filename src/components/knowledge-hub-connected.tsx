@@ -29,6 +29,10 @@ interface KnowledgeItem {
   knowledge_connections: { target_id: string }[];
 }
 
+interface ApiError {
+  message: string;
+}
+
 export default function KnowledgeHubConnected() {
   const [activeTab, setActiveTab] = useState("browse");
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,7 +65,7 @@ export default function KnowledgeHubConnected() {
         // Extract all unique tags
         const tags = new Set<string>();
         data.forEach((item) => {
-          item.knowledge_tags?.forEach((tagObj) => {
+          item.knowledge_tags?.forEach((tagObj: { tag: string }) => {
             tags.add(tagObj.tag);
           });
         });
@@ -162,7 +166,7 @@ export default function KnowledgeHubConnected() {
       } else {
         toast({
           title: "Error",
-          description: error?.message || "Failed to create knowledge item",
+          description: (error as ApiError)?.message || "Failed to create knowledge item",
           variant: "destructive",
         });
       }

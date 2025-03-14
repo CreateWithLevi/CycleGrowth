@@ -7,10 +7,32 @@ import { Loader2, Check } from "lucide-react";
 import { useToast } from "./ui/use-toast";
 import { createClient } from "../../supabase/client";
 
+interface Task {
+  id: string;
+  created_at: string;
+}
+
+interface AnalyticsData {
+  tasks: Task[];
+  metrics: {
+    totalTasks: number;
+    completedTasks: number;
+    completionRate: number;
+    domainProgress: Record<string, { progress: number; tasks: number }>;
+  };
+  systems: any[];
+  cycloEvolution?: {
+    current_stage: string;
+    interactions_count: number;
+    systems_created: number;
+    tasks_completed: number;
+  };
+}
+
 export default function ProgressAnalyticsConnected() {
   const [timeframe, setTimeframe] = useState("week");
   const [isLoading, setIsLoading] = useState(true);
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,12 +66,12 @@ export default function ProgressAnalyticsConnected() {
 
   // Generate chart data based on timeframe
   const generateChartData = () => {
-    if (!analyticsData) return { labels: [], taskData: [] };
+    if (!analyticsData) return { labels: [] as string[], taskData: [] as number[] };
 
     const { tasks } = analyticsData;
     const now = new Date();
-    let labels = [];
-    let taskData = [];
+    let labels: string[] = [];
+    let taskData: number[] = [];
 
     if (timeframe === "week") {
       // Generate last 7 days

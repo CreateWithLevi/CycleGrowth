@@ -4,11 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useState } from "react";
 
+type ChartDataItem =
+  | { day: string; tasks: number; hours: number }
+  | { week: string; tasks: number; hours: number }
+  | { month: string; tasks: number; hours: number };
+
 export default function ProgressAnalytics() {
   const [timeframe, setTimeframe] = useState("week");
 
   // Sample data for the charts
-  const weeklyData = [
+  const weeklyData: ChartDataItem[] = [
     { day: "Mon", tasks: 3, hours: 2.5 },
     { day: "Tue", tasks: 5, hours: 3.2 },
     { day: "Wed", tasks: 2, hours: 1.8 },
@@ -18,14 +23,14 @@ export default function ProgressAnalytics() {
     { day: "Sun", tasks: 1, hours: 0.8 },
   ];
 
-  const monthlyData = [
+  const monthlyData: ChartDataItem[] = [
     { week: "Week 1", tasks: 12, hours: 10.2 },
     { week: "Week 2", tasks: 15, hours: 12.5 },
     { week: "Week 3", tasks: 10, hours: 8.7 },
     { week: "Week 4", tasks: 18, hours: 15.3 },
   ];
 
-  const yearlyData = [
+  const yearlyData: ChartDataItem[] = [
     { month: "Jan", tasks: 45, hours: 38 },
     { month: "Feb", tasks: 52, hours: 42 },
     { month: "Mar", tasks: 48, hours: 40 },
@@ -133,12 +138,9 @@ export default function ProgressAnalytics() {
               <h3 className="text-lg font-medium mb-4">Task Completion</h3>
               <div className="h-64 flex items-end justify-between gap-2">
                 {chartData.map((item, index) => {
-                  const label =
-                    timeframe === "week"
-                      ? item.day
-                      : timeframe === "month"
-                        ? item.week
-                        : item.month;
+                  const label = item.hasOwnProperty('day') ? (item as { day: string }).day
+                    : item.hasOwnProperty('week') ? (item as { week: string }).week
+                      : (item as { month: string }).month;
                   const height = (item.tasks / maxTasks) * 100;
 
                   return (

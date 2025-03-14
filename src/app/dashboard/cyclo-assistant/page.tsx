@@ -25,6 +25,7 @@ import {
   Sparkles,
   Target,
   Zap,
+  Check,
 } from "lucide-react";
 import CycloAssistant from "@/components/cyclo-assistant";
 

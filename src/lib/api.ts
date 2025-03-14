@@ -165,7 +165,7 @@ export async function getAnalyticsData(
 
     // Process data based on timeframe
     const now = new Date();
-    let startDate;
+    let startDate: Date;
 
     if (timeframe === "week") {
       startDate = new Date(now);
@@ -176,6 +176,8 @@ export async function getAnalyticsData(
     } else if (timeframe === "year") {
       startDate = new Date(now);
       startDate.setFullYear(now.getFullYear() - 1);
+    } else {
+      startDate = new Date(0); // Default to epoch if invalid timeframe
     }
 
     const filteredTasks = tasks.filter(
@@ -194,8 +196,16 @@ export async function getAnalyticsData(
     const completionRate =
       totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
+    interface DomainProgress {
+      [key: string]: {
+        progress: number;
+        count: number;
+        tasks: number;
+      };
+    }
+
     // Domain progress
-    const domainProgress = systems.reduce((acc, system) => {
+    const domainProgress: DomainProgress = systems.reduce((acc: DomainProgress, system) => {
       if (!acc[system.domain]) {
         acc[system.domain] = {
           progress: 0,
