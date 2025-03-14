@@ -45,11 +45,21 @@ export default function SystemBuilderForm() {
         .replace(/[^A-Za-z0-9_-]/g, ""); // Remove any characters that aren't alphanumeric, underscore, or hyphen
 
       console.log("Invoking function with slug:", slug);
-      const { data, error } = await supabase.functions.invoke(slug, {
+      const response = await supabase.functions.invoke(slug, {
         body: formData,
       });
 
-      if (error) throw error;
+      console.log("Function response:", response);
+
+      if (response.error) {
+        throw new Error(
+          response.error.message || "Failed to create growth system",
+        );
+      }
+
+      if (!response.data) {
+        throw new Error("No data returned from function");
+      }
 
       // Redirect to the dashboard or the new system page
       router.push("/dashboard");

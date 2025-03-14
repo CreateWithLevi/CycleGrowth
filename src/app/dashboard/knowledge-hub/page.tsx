@@ -1,5 +1,5 @@
 import DashboardNavbar from "@/components/dashboard-navbar";
-import KnowledgeHub from "@/components/knowledge-hub";
+import KnowledgeHubConnected from "@/components/knowledge-hub-connected";
 import { createClient } from "../../../../supabase/server";
 import { redirect } from "next/navigation";
 import { SubscriptionCheck } from "@/components/subscription-check";
@@ -30,7 +30,7 @@ export default async function KnowledgeHubPage() {
             </p>
           </div>
 
-          <KnowledgeHub />
+          <KnowledgeHubConnected />
         </div>
       </main>
     </SubscriptionCheck>

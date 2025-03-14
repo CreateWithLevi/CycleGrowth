@@ -50,6 +50,25 @@ serve(async (req) => {
       );
     }
 
+    // Check if growth_systems table exists
+    const { error: tableCheckError } = await supabaseClient
+      .from("growth_systems")
+      .select("id")
+      .limit(1);
+
+    if (tableCheckError) {
+      console.error("Table check error:", tableCheckError);
+      return new Response(
+        JSON.stringify({
+          error: "Database table not ready. Please check your database setup.",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        },
+      );
+    }
+
     // Create the growth system
     const { data: system, error: systemError } = await supabaseClient
       .from("growth_systems")
@@ -66,6 +85,7 @@ serve(async (req) => {
       .single();
 
     if (systemError) {
+      console.error("System creation error:", systemError);
       return new Response(JSON.stringify({ error: systemError.message }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
@@ -73,12 +93,24 @@ serve(async (req) => {
     }
 
     // Create an activity for the new system
-    await supabaseClient.from("growth_activities").insert({
-      user_id: user.id,
-      action: "Created new system",
-      item: title,
-      system_id: system.id,
-    });
+    try {
+      const { error: activityError } = await supabaseClient
+        .from("growth_activities")
+        .insert({
+          user_id: user.id,
+          action: "Created new system",
+          item: title,
+          system_id: system.id,
+        });
+
+      if (activityError) {
+        console.error("Activity creation error:", activityError);
+        // Don't fail the whole request if activity creation fails
+      }
+    } catch (activityErr) {
+      console.error("Activity creation exception:", activityErr);
+      // Don't fail the whole request if activity creation fails
+    }
 
     return new Response(JSON.stringify({ success: true, data: system }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -86,9 +118,12 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error creating growth system:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: error.message || "Unknown error occurred" }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      },
+    );
   }
 });

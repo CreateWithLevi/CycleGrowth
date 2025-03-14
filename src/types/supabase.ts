@@ -9,6 +9,339 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      growth_activities: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          item: string
+          system_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          item: string
+          system_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          item?: string
+          system_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_activities_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "growth_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      growth_systems: {
+        Row: {
+          created_at: string | null
+          current_phase: string
+          description: string | null
+          domain: string
+          id: string
+          progress: number
+          start_date: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_phase?: string
+          description?: string | null
+          domain: string
+          id?: string
+          progress?: number
+          start_date?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_phase?: string
+          description?: string | null
+          domain?: string
+          id?: string
+          progress?: number
+          start_date?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      growth_tasks: {
+        Row: {
+          created_at: string | null
+          cycle_phase: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string
+          status: string
+          system_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          cycle_phase?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          system_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          cycle_phase?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          system_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_tasks_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "growth_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_connections: {
+        Row: {
+          created_at: string | null
+          id: string
+          source_id: string
+          target_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          source_id: string
+          target_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          source_id?: string
+          target_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_connections_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_connections_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_items: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          source: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          source?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          source?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      knowledge_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          knowledge_id: string
+          tag: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          knowledge_id: string
+          tag: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          knowledge_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_tags_knowledge_id_fkey"
+            columns: ["knowledge_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reflection_insights: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          reflection_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          reflection_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          reflection_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reflection_insights_reflection_id_fkey"
+            columns: ["reflection_id"]
+            isOneToOne: false
+            referencedRelation: "reflections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reflection_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          reflection_id: string
+          tag: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reflection_id: string
+          tag: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reflection_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reflection_tags_reflection_id_fkey"
+            columns: ["reflection_id"]
+            isOneToOne: false
+            referencedRelation: "reflections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reflections: {
+        Row: {
+          content: string
+          created_at: string | null
+          cycle_phase: string
+          domain: string
+          id: string
+          system_id: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          cycle_phase: string
+          domain: string
+          id?: string
+          system_id?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          cycle_phase?: string
+          domain?: string
+          id?: string
+          system_id?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reflections_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "growth_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reflections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           amount: number | null
@@ -94,6 +427,77 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      task_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          tag: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          tag: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          tag?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_tags_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "growth_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_cyclo_evolution: {
+        Row: {
+          created_at: string | null
+          current_stage: number
+          id: string
+          interactions_count: number
+          knowledge_items_created: number | null
+          last_interaction: string | null
+          reflections_created: number | null
+          systems_created: number | null
+          tasks_completed: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_stage?: number
+          id?: string
+          interactions_count?: number
+          knowledge_items_created?: number | null
+          last_interaction?: string | null
+          reflections_created?: number | null
+          systems_created?: number | null
+          tasks_completed?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_stage?: number
+          id?: string
+          interactions_count?: number
+          knowledge_items_created?: number | null
+          last_interaction?: string | null
+          reflections_created?: number | null
+          systems_created?: number | null
+          tasks_completed?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {

@@ -1,5 +1,5 @@
 import DashboardNavbar from "@/components/dashboard-navbar";
-import ReflectionTool from "@/components/reflection-tool";
+import ReflectionToolConnected from "@/components/reflection-tool-connected";
 import { createClient } from "../../../../supabase/server";
 import { redirect } from "next/navigation";
 import { SubscriptionCheck } from "@/components/subscription-check";
@@ -28,7 +28,7 @@ export default async function ReflectionPage() {
             </p>
           </div>
 
-          <ReflectionTool />
+          <ReflectionToolConnected />
         </div>
       </main>
     </SubscriptionCheck>
