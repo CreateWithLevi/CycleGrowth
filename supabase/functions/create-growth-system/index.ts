@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // This is needed if you're planning to invoke your function from a browser.
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -60,6 +60,7 @@ serve(async (req) => {
         domain,
         current_phase: "planning",
         progress: 0,
+        start_date: new Date().toISOString(),
       })
       .select()
       .single();
@@ -84,6 +85,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
+    console.error("Error creating growth system:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

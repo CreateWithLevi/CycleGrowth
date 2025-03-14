@@ -35,12 +35,19 @@ export default function SystemBuilderForm() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "supabase-functions-create-growth-system",
-        {
-          body: formData,
-        },
-      );
+      // Get the relative function path from the file path
+      const relativeFunctionFilePath =
+        "supabase/functions/create-growth-system/index.ts";
+      // Convert the path to a slug format that Supabase expects
+      const slug = relativeFunctionFilePath
+        .replace("/index.ts", "")
+        .replace(/\//g, "-") // Replace all forward slashes with hyphens
+        .replace(/[^A-Za-z0-9_-]/g, ""); // Remove any characters that aren't alphanumeric, underscore, or hyphen
+
+      console.log("Invoking function with slug:", slug);
+      const { data, error } = await supabase.functions.invoke(slug, {
+        body: formData,
+      });
 
       if (error) throw error;
 
@@ -48,6 +55,7 @@ export default function SystemBuilderForm() {
       router.push("/dashboard");
       router.refresh();
     } catch (err: any) {
+      console.error("Error creating growth system:", err);
       setError(err.message || "Failed to create growth system");
     } finally {
       setIsSubmitting(false);
