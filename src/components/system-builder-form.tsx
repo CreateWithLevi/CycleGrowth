@@ -34,39 +34,33 @@ export default function SystemBuilderForm() {
     setIsSubmitting(true);
     setError(null);
 
+    console.log('Submitting form data:', formData);
+
     try {
-      // Get the relative function path from the file path
-      const relativeFunctionFilePath =
-        "supabase/functions/create-growth-system/index.ts";
-      // Convert the path to a slug format that Supabase expects
-      const slug = relativeFunctionFilePath
-        .replace("/index.ts", "")
-        .replace(/\//g, "-") // Replace all forward slashes with hyphens
-        .replace(/[^A-Za-z0-9_-]/g, ""); // Remove any characters that aren't alphanumeric, underscore, or hyphen
+      const response = await supabase.functions.invoke(
+        "create-growth-system",
+        {
+          body: formData,
+        });
 
-      console.log("Invoking function with slug:", slug);
-      const response = await supabase.functions.invoke(slug, {
-        body: formData,
-      });
-
-      console.log("Function response:", response);
+      console.log('Response from Edge Function:', response);
 
       if (response.error) {
-        throw new Error(
-          response.error.message || "Failed to create growth system",
-        );
+        console.error("Detailed error:", {
+          message: response.error.message,
+          details: response.error.details,
+          status: response.error.status
+        });
+        throw response.error;
       }
 
-      if (!response.data) {
-        throw new Error("No data returned from function");
-      }
-
-      // Redirect to the dashboard or the new system page
       router.push("/dashboard");
       router.refresh();
     } catch (err: any) {
-      console.error("Error creating growth system:", err);
-      setError(err.message || "Failed to create growth system");
+      console.error("Full error object:", err);
+      setError(
+        `Failed to create growth system: ${err.message || err.toString()}`
+      );
     } finally {
       setIsSubmitting(false);
     }

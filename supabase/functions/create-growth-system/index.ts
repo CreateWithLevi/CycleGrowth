@@ -40,7 +40,10 @@ serve(async (req) => {
     // Get the system data from the request
     const { title, description, domain } = await req.json();
 
+    console.log("Received request data:", { title, description, domain });
+
     if (!title || !domain) {
+      console.log("Validation failed: missing title or domain");
       return new Response(
         JSON.stringify({ error: "Title and domain are required" }),
         {
@@ -57,10 +60,15 @@ serve(async (req) => {
       .limit(1);
 
     if (tableCheckError) {
-      console.error("Table check error:", tableCheckError);
+      console.error("Table check error details:", {
+        message: tableCheckError.message,
+        details: tableCheckError.details,
+        hint: tableCheckError.hint
+      });
       return new Response(
         JSON.stringify({
           error: "Database table not ready. Please check your database setup.",
+          details: tableCheckError.message
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -85,8 +93,16 @@ serve(async (req) => {
       .single();
 
     if (systemError) {
-      console.error("System creation error:", systemError);
-      return new Response(JSON.stringify({ error: systemError.message }), {
+      console.error("System creation error details:", {
+        message: systemError.message,
+        details: systemError.details,
+        hint: systemError.hint,
+        data: { user_id: user.id, title, domain }
+      });
+      return new Response(JSON.stringify({
+        error: systemError.message,
+        details: systemError.details
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
