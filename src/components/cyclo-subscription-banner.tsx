@@ -24,7 +24,7 @@ export default function CycloSubscriptionBanner() {
             <Button
               size="sm"
               variant="outline"
-              className="text-white border-white hover:bg-white/20"
+              className="text-white bg-white/0 border-white hover:bg-white/20 hover:text-white"
             >
               Learn More
             </Button>
