@@ -1,5 +1,5 @@
 import DashboardNavbar from "@/components/dashboard-navbar";
-import TaskManager from "@/components/task-manager";
+import TaskManagerConnected from "@/components/task-manager-connected";
 import { createClient } from "../../../../supabase/server";
 import { redirect } from "next/navigation";
 import { SubscriptionCheck } from "@/components/subscription-check";
@@ -27,7 +27,7 @@ export default async function TasksPage() {
             </p>
           </div>
 
-          <TaskManager />
+          <TaskManagerConnected />
         </div>
       </main>
     </SubscriptionCheck>

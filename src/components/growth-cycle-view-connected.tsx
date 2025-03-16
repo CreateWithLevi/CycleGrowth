@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "../../supabase/client";
-import { useToast } from "./ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -15,7 +13,11 @@ import {
   Check,
   Clock,
   Plus,
+  Loader2,
 } from "lucide-react";
+import { createClient } from "../../supabase/client";
+import { useToast } from "./ui/use-toast";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface Task {
   id: number;
@@ -35,24 +37,35 @@ interface GrowthSystem {
   tasks: Task[];
 }
 
-interface GrowthCycleViewProps {
+interface GrowthCycleViewConnectedProps {
   systemId?: string;
   defaultPhase?: "planning" | "execution" | "analysis" | "improvement";
 }
 
-export default function GrowthCycleView({
-  systemId,
+export default function GrowthCycleViewConnected({
   defaultPhase = "planning",
-}: GrowthCycleViewProps) {
+}: GrowthCycleViewConnectedProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [system, setSystem] = useState<GrowthSystem | null>(null);
+  const [activePhase, setActivePhase] = useState<string>(defaultPhase);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const { toast } = useToast();
   const supabase = createClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const systemId = searchParams.get("system") || undefined;
 
   useEffect(() => {
     fetchSystem();
   }, [systemId]);
+
+  useEffect(() => {
+    if (system) {
+      setTasks(system.tasks);
+      setActivePhase(system.currentPhase);
+    }
+  }, [system]);
 
   const fetchSystem = async () => {
     setIsLoading(true);
@@ -129,22 +142,6 @@ export default function GrowthCycleView({
       setIsLoading(false);
     }
   };
-  const [activePhase, setActivePhase] = useState<string>(defaultPhase);
-  const [tasks, setTasks] = useState<Task[]>([]);
-
-  useEffect(() => {
-    if (system) {
-      setTasks(system.tasks);
-      setActivePhase(system.currentPhase);
-    }
-  }, [system]);
-
-  const phaseProgress = {
-    planning: 25,
-    execution: 0,
-    analysis: 0,
-    improvement: 0,
-  };
 
   const toggleTaskCompletion = async (taskId: number) => {
     // Find the task
@@ -220,12 +217,56 @@ export default function GrowthCycleView({
     }
   };
 
+  const phaseProgress = {
+    planning: 25,
+    execution: 0,
+    analysis: 0,
+    improvement: 0,
+  };
+
   const phaseTasks = tasks.filter((task) => task.phase === activePhase);
+
+  const updatePhase = async (newPhase: string) => {
+    if (!system || !systemId) return;
+
+    try {
+      setIsLoading(true);
+
+      const { error } = await supabase.functions.invoke(
+        "supabase-functions-update-growth-system",
+        {
+          body: {
+            systemId,
+            updates: { current_phase: newPhase },
+          },
+        },
+      );
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Phase updated to ${newPhase}`,
+      });
+
+      // Refresh data
+      fetchSystem();
+    } catch (err: any) {
+      console.error("Error updating phase:", err);
+      toast({
+        title: "Error",
+        description: "Failed to update phase",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
       <div className="w-full flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <Loader2 className="h-12 w-12 animate-spin text-purple-600" />
       </div>
     );
   }
@@ -249,7 +290,7 @@ export default function GrowthCycleView({
           started.
         </p>
         <Button
-          onClick={() => (window.location.href = "/dashboard/system-builder")}
+          onClick={() => router.push("/dashboard/system-builder")}
           className="mt-4 bg-purple-600 hover:bg-purple-700"
         >
           <Plus className="mr-2 h-4 w-4" /> Create Growth System
@@ -349,7 +390,10 @@ export default function GrowthCycleView({
             ))}
           </div>
 
-          <Button className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700">
+          <Button
+            className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700"
+            onClick={() => setActivePhase(system.currentPhase)}
+          >
             Continue Current Phase <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </CardContent>
@@ -435,22 +479,52 @@ export default function GrowthCycleView({
                       <p className="text-gray-500">
                         No tasks for this phase yet.
                       </p>
-                      <Button variant="outline" className="mt-4">
+                      <Button
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => router.push("/dashboard/tasks")}
+                      >
                         <Plus className="h-4 w-4 mr-2" /> Add Task
                       </Button>
                     </div>
                   )}
 
                   {phaseTasks.length > 0 && (
-                    <Button variant="outline" className="mt-4">
+                    <Button
+                      variant="outline"
+                      className="mt-4"
+                      onClick={() => router.push("/dashboard/tasks")}
+                    >
                       <Plus className="h-4 w-4 mr-2" /> Add Task
                     </Button>
                   )}
 
                   {phase === system.currentPhase && (
                     <div className="mt-8">
-                      <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                        Complete {phase} Phase
+                      <Button
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                        onClick={() => {
+                          const phases = [
+                            "planning",
+                            "execution",
+                            "analysis",
+                            "improvement",
+                          ];
+                          const currentIndex = phases.indexOf(phase);
+                          const nextPhase =
+                            phases[(currentIndex + 1) % phases.length];
+                          updatePhase(nextPhase);
+                        }}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Updating...
+                          </>
+                        ) : (
+                          <>Complete {phase} Phase</>
+                        )}
                       </Button>
                     </div>
                   )}

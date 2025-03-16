@@ -1,5 +1,5 @@
 import DashboardNavbar from "@/components/dashboard-navbar";
-import GrowthCycleView from "@/components/growth-cycle-view";
+import GrowthCycleViewConnected from "@/components/growth-cycle-view-connected";
 import { createClient } from "../../../../supabase/server";
 import { redirect } from "next/navigation";
 import { SubscriptionCheck } from "@/components/subscription-check";
@@ -38,7 +38,7 @@ export default async function GrowthCyclesPage() {
             </Link>
           </div>
 
-          <GrowthCycleView />
+          <GrowthCycleViewConnected />
         </div>
       </main>
     </SubscriptionCheck>

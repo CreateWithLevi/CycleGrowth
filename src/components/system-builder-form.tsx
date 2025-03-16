@@ -35,21 +35,20 @@ export default function SystemBuilderForm() {
     setError(null);
 
     try {
-      // Get the relative function path from the file path
-      const relativeFunctionFilePath =
-        "supabase/functions/create-growth-system/index.ts";
-      // Convert the path to a slug format that Supabase expects
-      const slug = relativeFunctionFilePath
-        .replace("/index.ts", "")
-        .replace(/\//g, "-") // Replace all forward slashes with hyphens
-        .replace(/[^A-Za-z0-9_-]/g, ""); // Remove any characters that aren't alphanumeric, underscore, or hyphen
+      // Convert the path to the function name format expected by Supabase
+      const functionName = "supabase-functions-create-growth-system";
 
-      console.log("Invoking function with slug:", slug);
-      const response = await supabase.functions.invoke(slug, {
+      console.log("Invoking function:", functionName);
+      const response = await supabase.functions.invoke(functionName, {
         body: formData,
       });
 
       console.log("Function response:", response);
+
+      // Log detailed error information if available
+      if (response.error) {
+        console.error("Function error details:", response.error);
+      }
 
       if (response.error) {
         throw new Error(
