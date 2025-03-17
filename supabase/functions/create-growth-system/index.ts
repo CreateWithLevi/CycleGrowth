@@ -113,7 +113,7 @@ serve(async (req) => {
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 500,
+            status: 200,
           },
         );
       }
@@ -125,7 +125,7 @@ serve(async (req) => {
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 500,
+            status: 200,
           },
         );
       }
@@ -164,7 +164,7 @@ serve(async (req) => {
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 500,
+          status: 200, // Changed from 500 to 200 to ensure client receives the error message
         },
       );
     }
@@ -178,7 +178,7 @@ serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 200, // Changed from 500 to 200 to ensure client receives the error message
       },
     );
   }

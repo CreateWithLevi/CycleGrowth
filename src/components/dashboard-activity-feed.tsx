@@ -33,7 +33,7 @@ export default function DashboardActivityFeed({
         <ul className="space-y-4">
           {activities.map((activity, index) => (
             <li
-              key={index}
+              key={`activity-${index}-${activity.time}`}
               className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-0 last:pb-0"
             >
               <div className="p-2 rounded-full bg-purple-100 text-purple-600 mt-1">

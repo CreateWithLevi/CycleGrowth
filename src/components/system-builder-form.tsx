@@ -35,51 +35,32 @@ export default function SystemBuilderForm() {
     setError(null);
 
     try {
-      // First try direct database insertion
-      const { data: directData, error: directError } = await supabase
-        .from("growth_systems")
-        .insert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          title: formData.title,
-          description: formData.description,
-          domain: formData.domain,
-          current_phase: "planning",
-          progress: 0,
-          start_date: new Date().toISOString(),
-        })
-        .select()
-        .single();
+      // Skip direct insertion and use edge function directly
+      const functionName = "supabase-functions-create-growth-system";
+      console.log("Using edge function:", functionName);
 
-      if (directError) {
-        console.error("Direct insertion error:", directError);
-        // Fall back to edge function if direct insertion fails
-        const functionName = "supabase-functions-create-growth-system";
+      const response = await supabase.functions.invoke(functionName, {
+        body: formData,
+      });
 
-        console.log("Falling back to edge function:", functionName);
-        const response = await supabase.functions.invoke(functionName, {
-          body: formData,
+      console.log("Function response:", response);
+
+      if (response.error) {
+        console.error("Function error details:", response.error);
+        console.error("Detailed error:", {
+          message: response.error.message,
+          details: response.error.details,
+          status: response.error.status,
         });
+        throw response.error;
+      }
 
-        console.log("Function response:", response);
+      if (response.data && response.data.error) {
+        throw new Error(response.data.error);
+      }
 
-        if (response.error) {
-          console.error("Function error details:", response.error);
-          console.error("Detailed error:", {
-            message: response.error.message,
-            details: response.error.details,
-            status: response.error.status,
-          });
-          throw response.error;
-        }
-      } else {
-        console.log("Direct insertion successful:", directData);
-        // Create an activity for the new system
-        await supabase.from("growth_activities").insert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          action: "Created new system",
-          item: formData.title,
-          system_id: directData.id,
-        });
+      if (response.data && response.data.data) {
+        console.log("System created successfully:", response.data.data);
       }
 
       router.push("/dashboard");

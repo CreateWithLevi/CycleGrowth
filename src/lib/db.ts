@@ -59,14 +59,18 @@ export async function fetchCurrentCycle(
     .select("*")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
-    .limit(1)
-    .single();
+    .limit(1);
 
-  if (error || !data) {
+  if (error) {
+    console.error("Error fetching current cycle:", error);
     return null;
   }
 
-  return data as GrowthSystem;
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  return data[0] as GrowthSystem;
 }
 
 export async function fetchGrowthSystems(
