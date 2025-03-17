@@ -5,7 +5,7 @@ export const createClient = async () => {
   // Get cookies from the request
   const cookieStore = cookies();
 
-  return createServerClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -18,7 +18,7 @@ export const createClient = async () => {
               value,
             }));
           } catch (error) {
-            // If cookies() is called in an environment where it's not allowed
+            console.error("Error getting cookies:", error);
             return [];
           }
         },
@@ -29,11 +29,13 @@ export const createClient = async () => {
               cookieStore.set(name, value, options);
             });
           } catch (error) {
-            // If cookies() is called in an environment where it's not allowed
+            console.error("Error setting cookies:", error);
             // Silent fail as we can't set cookies in some environments
           }
         },
       },
     },
   );
+
+  return supabase;
 };

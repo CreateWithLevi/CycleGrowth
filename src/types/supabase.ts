@@ -579,7 +579,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_table_rls_status: {
+        Args: {
+          table_name: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

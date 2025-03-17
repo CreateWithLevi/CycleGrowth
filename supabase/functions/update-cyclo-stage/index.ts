@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // This is needed if you're planning to invoke your function from a browser.
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -31,10 +31,14 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      });
+      console.error("Authentication error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", details: userError }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        },
+      );
     }
 
     // Get the stage data from the request
@@ -51,7 +55,7 @@ serve(async (req) => {
     }
 
     // Check if user already has a record
-    const { data: existingData } = await supabaseClient
+    const { data: existingData, error: recordError } = await supabaseClient
       .from("user_cyclo_evolution")
       .select("*")
       .eq("user_id", user.id)
@@ -72,10 +76,14 @@ serve(async (req) => {
         .single();
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 500,
-        });
+        console.error("Update error:", error);
+        return new Response(
+          JSON.stringify({ error: error.message, details: error }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 500,
+          },
+        );
       }
 
       result = data;
@@ -92,31 +100,44 @@ serve(async (req) => {
         .single();
 
       if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 500,
-        });
+        console.error("Insert error:", error);
+        return new Response(
+          JSON.stringify({ error: error.message, details: error }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 500,
+          },
+        );
       }
 
       result = data;
     }
 
     // Create an activity for the Cyclo upgrade
-    await supabaseClient.from("growth_activities").insert({
-      user_id: user.id,
-      action: "Upgraded Cyclo to",
-      item: `Stage ${stage}`,
-      system_id: null,
-    });
+    try {
+      await supabaseClient.from("growth_activities").insert({
+        user_id: user.id,
+        action: "Upgraded Cyclo to",
+        item: `Stage ${stage}`,
+        system_id: null,
+      });
+    } catch (activityError) {
+      console.error("Activity creation error:", activityError);
+      // Don't fail the whole request if activity creation fails
+    }
 
     return new Response(JSON.stringify({ success: true, data: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error("Error updating Cyclo stage:", error);
+    return new Response(
+      JSON.stringify({ error: error.message, details: error }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      },
+    );
   }
 });

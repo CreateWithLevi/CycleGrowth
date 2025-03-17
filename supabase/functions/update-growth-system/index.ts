@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // This is needed if you're planning to invoke your function from a browser.
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -31,10 +31,14 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      });
+      console.error("Authentication error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", details: userError }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        },
+      );
     }
 
     // Get the system data from the request
@@ -58,8 +62,12 @@ serve(async (req) => {
         .single();
 
     if (systemCheckError || !existingSystem) {
+      console.error("System check error:", systemCheckError);
       return new Response(
-        JSON.stringify({ error: "System not found or access denied" }),
+        JSON.stringify({
+          error: "System not found or access denied",
+          details: systemCheckError,
+        }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 404,
@@ -91,20 +99,29 @@ serve(async (req) => {
       .single();
 
     if (updateError) {
-      return new Response(JSON.stringify({ error: updateError.message }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
+      console.error("Update error:", updateError);
+      return new Response(
+        JSON.stringify({ error: updateError.message, details: updateError }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        },
+      );
     }
 
     // Log activity if phase changed
     if (phaseChanged) {
-      await supabaseClient.from("growth_activities").insert({
-        user_id: user.id,
-        action: "Updated phase to",
-        item: current_phase,
-        system_id: id,
-      });
+      try {
+        await supabaseClient.from("growth_activities").insert({
+          user_id: user.id,
+          action: "Updated phase to",
+          item: current_phase,
+          system_id: id,
+        });
+      } catch (activityError) {
+        console.error("Activity creation error:", activityError);
+        // Don't fail the whole request if activity creation fails
+      }
     }
 
     return new Response(
@@ -115,9 +132,13 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error("Error updating growth system:", error);
+    return new Response(
+      JSON.stringify({ error: error.message, details: error }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      },
+    );
   }
 });

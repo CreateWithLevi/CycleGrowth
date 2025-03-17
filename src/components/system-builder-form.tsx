@@ -35,28 +35,51 @@ export default function SystemBuilderForm() {
     setError(null);
 
     try {
-      // Convert the path to the function name format expected by Supabase
-      const functionName = "supabase-functions-create-growth-system";
+      // First try direct database insertion
+      const { data: directData, error: directError } = await supabase
+        .from("growth_systems")
+        .insert({
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          title: formData.title,
+          description: formData.description,
+          domain: formData.domain,
+          current_phase: "planning",
+          progress: 0,
+          start_date: new Date().toISOString(),
+        })
+        .select()
+        .single();
 
-      console.log("Invoking function:", functionName);
-      const response = await supabase.functions.invoke(functionName, {
-        body: formData,
-      });
+      if (directError) {
+        console.error("Direct insertion error:", directError);
+        // Fall back to edge function if direct insertion fails
+        const functionName = "supabase-functions-create-growth-system";
 
-      console.log("Function response:", response);
-
-      // Log detailed error information if available
-      if (response.error) {
-        console.error("Function error details:", response.error);
-      }
-
-      if (response.error) {
-        console.error("Detailed error:", {
-          message: response.error.message,
-          details: response.error.details,
-          status: response.error.status
+        console.log("Falling back to edge function:", functionName);
+        const response = await supabase.functions.invoke(functionName, {
+          body: formData,
         });
-        throw response.error;
+
+        console.log("Function response:", response);
+
+        if (response.error) {
+          console.error("Function error details:", response.error);
+          console.error("Detailed error:", {
+            message: response.error.message,
+            details: response.error.details,
+            status: response.error.status,
+          });
+          throw response.error;
+        }
+      } else {
+        console.log("Direct insertion successful:", directData);
+        // Create an activity for the new system
+        await supabase.from("growth_activities").insert({
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          action: "Created new system",
+          item: formData.title,
+          system_id: directData.id,
+        });
       }
 
       router.push("/dashboard");
@@ -64,7 +87,7 @@ export default function SystemBuilderForm() {
     } catch (err: any) {
       console.error("Full error object:", err);
       setError(
-        `Failed to create growth system: ${err.message || err.toString()}`
+        `Failed to create growth system: ${err.message || err.toString()}`,
       );
     } finally {
       setIsSubmitting(false);

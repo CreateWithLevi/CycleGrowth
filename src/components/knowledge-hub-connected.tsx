@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { createKnowledgeItem, getKnowledgeItems } from "@/lib/api";
 import { useToast } from "./ui/use-toast";
+import { createClient } from "../../supabase/client";
 
 interface KnowledgeItem {
   id: string;
@@ -141,40 +142,95 @@ export default function KnowledgeHubConnected() {
 
     setIsLoading(true);
     try {
-      const { success, data, error } = await createKnowledgeItem({
-        title: newNote.title,
-        content: newNote.content,
-        tags: newNote.tags.filter((tag) => tag.trim() !== ""),
-        connections: newNote.connections,
-        source: newNote.source || undefined,
-      });
+      // Try direct database insertion first
+      const supabase = createClient();
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id;
 
-      if (success) {
-        toast({
-          title: "Success",
-          description: "Knowledge item created successfully",
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+
+      // Insert the knowledge item
+      const { data: knowledgeItem, error: knowledgeError } = await supabase
+        .from("knowledge_items")
+        .insert({
+          user_id: userId,
+          title: newNote.title,
+          content: newNote.content,
+          source: newNote.source || null,
+        })
+        .select()
+        .single();
+
+      if (knowledgeError) {
+        console.error("Direct insertion error:", knowledgeError);
+        // Fall back to edge function
+        const { success, data, error } = await createKnowledgeItem({
+          title: newNote.title,
+          content: newNote.content,
+          tags: newNote.tags.filter((tag) => tag.trim() !== ""),
+          connections: newNote.connections,
+          source: newNote.source || undefined,
         });
-        setNewNote({
-          title: "",
-          content: "",
-          tags: [""],
-          connections: [],
-          source: "",
-        });
-        setActiveTab("browse");
-        fetchKnowledgeItems();
+
+        if (!success) {
+          throw error || new Error("Failed to create knowledge item");
+        }
       } else {
-        toast({
-          title: "Error",
-          description: (error as ApiError)?.message || "Failed to create knowledge item",
-          variant: "destructive",
+        // Add tags if provided
+        if (newNote.tags && newNote.tags.length > 0) {
+          const filteredTags = newNote.tags.filter((tag) => tag.trim() !== "");
+          if (filteredTags.length > 0) {
+            const tagInserts = filteredTags.map((tag) => ({
+              knowledge_id: knowledgeItem.id,
+              tag,
+            }));
+
+            await supabase.from("knowledge_tags").insert(tagInserts);
+          }
+        }
+
+        // Add connections if provided
+        if (newNote.connections && newNote.connections.length > 0) {
+          const connectionInserts = newNote.connections.map((targetId) => ({
+            source_id: knowledgeItem.id,
+            target_id: targetId,
+          }));
+
+          await supabase
+            .from("knowledge_connections")
+            .insert(connectionInserts);
+        }
+
+        // Create an activity for the new knowledge item
+        await supabase.from("growth_activities").insert({
+          user_id: userId,
+          action: "Created knowledge item",
+          item: newNote.title,
+          system_id: null,
         });
       }
+
+      toast({
+        title: "Success",
+        description: "Knowledge item created successfully",
+      });
+      setNewNote({
+        title: "",
+        content: "",
+        tags: [""],
+        connections: [],
+        source: "",
+      });
+      setActiveTab("browse");
+      fetchKnowledgeItems();
     } catch (error) {
       console.error("Error creating knowledge item:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description:
+          (error as ApiError)?.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {

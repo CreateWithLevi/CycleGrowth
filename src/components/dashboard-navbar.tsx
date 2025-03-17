@@ -21,6 +21,7 @@ import {
   Settings,
   Check,
   Sparkles,
+  Database,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CycloLogo from "./cyclo-logo";
@@ -98,6 +99,13 @@ export default function DashboardNavbar() {
           >
             <Sparkles className="h-4 w-4" />
             <span>Cyclo Assistant</span>
+          </Link>
+          <Link
+            href="/dashboard/diagnostics"
+            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+          >
+            <Database className="h-4 w-4" />
+            <span>Diagnostics</span>
           </Link>
         </div>
 

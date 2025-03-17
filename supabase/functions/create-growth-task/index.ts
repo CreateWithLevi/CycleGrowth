@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // This is needed if you're planning to invoke your function from a browser.
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -31,10 +31,14 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      });
+      console.error("Authentication error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", details: userError }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        },
+      );
     }
 
     // Get the task data from the request
@@ -67,8 +71,12 @@ serve(async (req) => {
       .single();
 
     if (systemCheckError || !system) {
+      console.error("System check error:", systemCheckError);
       return new Response(
-        JSON.stringify({ error: "System not found or access denied" }),
+        JSON.stringify({
+          error: "System not found or access denied",
+          details: systemCheckError,
+        }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 404,
@@ -92,38 +100,56 @@ serve(async (req) => {
       .single();
 
     if (taskError) {
-      return new Response(JSON.stringify({ error: taskError.message }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
+      console.error("Task creation error:", taskError);
+      return new Response(
+        JSON.stringify({ error: taskError.message, details: taskError }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        },
+      );
     }
 
     // Add tags if provided
     if (tags && Array.isArray(tags) && tags.length > 0) {
-      const tagInserts = tags.map((tag) => ({
-        task_id: task.id,
-        tag,
-      }));
+      try {
+        const tagInserts = tags.map((tag) => ({
+          task_id: task.id,
+          tag,
+        }));
 
-      await supabaseClient.from("task_tags").insert(tagInserts);
+        await supabaseClient.from("task_tags").insert(tagInserts);
+      } catch (tagError) {
+        console.error("Tag creation error:", tagError);
+        // Don't fail the whole request if tag creation fails
+      }
     }
 
     // Create an activity for the new task
-    await supabaseClient.from("growth_activities").insert({
-      user_id: user.id,
-      action: "Created task",
-      item: title,
-      system_id,
-    });
+    try {
+      await supabaseClient.from("growth_activities").insert({
+        user_id: user.id,
+        action: "Created task",
+        item: title,
+        system_id,
+      });
+    } catch (activityError) {
+      console.error("Activity creation error:", activityError);
+      // Don't fail the whole request if activity creation fails
+    }
 
     return new Response(JSON.stringify({ success: true, data: task }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error("Error creating task:", error);
+    return new Response(
+      JSON.stringify({ error: error.message, details: error }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      },
+    );
   }
 });

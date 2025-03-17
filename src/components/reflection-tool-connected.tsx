@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { createReflection, getReflections } from "@/lib/api";
 import { useToast } from "./ui/use-toast";
+import { createClient } from "../../supabase/client";
 
 interface ReflectionEntry {
   id: string;
@@ -129,46 +130,101 @@ export default function ReflectionToolConnected() {
 
     setIsLoading(true);
     try {
-      const { success, data, error } = await createReflection({
-        title: newReflection.title,
-        content: newReflection.content,
-        cycle_phase: newReflection.cycle_phase,
-        domain: newReflection.domain,
-        system_id: newReflection.system_id || undefined,
-        insights: newReflection.insights.filter(
-          (insight) => insight.trim() !== "",
-        ),
-        tags: newReflection.tags,
-      });
+      // Try direct database insertion first
+      const supabase = createClient();
+      const user = await supabase.auth.getUser();
+      const userId = user.data.user?.id;
 
-      if (success) {
-        toast({
-          title: "Success",
-          description: "Reflection created successfully",
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+
+      // Insert the reflection
+      const { data: reflection, error: reflectionError } = await supabase
+        .from("reflections")
+        .insert({
+          user_id: userId,
+          system_id: newReflection.system_id || null,
+          title: newReflection.title,
+          content: newReflection.content,
+          cycle_phase: newReflection.cycle_phase,
+          domain: newReflection.domain,
+        })
+        .select()
+        .single();
+
+      if (reflectionError) {
+        console.error("Direct insertion error:", reflectionError);
+        // Fall back to edge function
+        const { success, data, error } = await createReflection({
+          title: newReflection.title,
+          content: newReflection.content,
+          cycle_phase: newReflection.cycle_phase,
+          domain: newReflection.domain,
+          system_id: newReflection.system_id || undefined,
+          insights: newReflection.insights.filter(
+            (insight) => insight.trim() !== "",
+          ),
+          tags: newReflection.tags,
         });
-        setNewReflection({
-          title: "",
-          content: "",
-          insights: [""],
-          tags: [],
-          cycle_phase: "planning",
-          domain: "professional",
-          system_id: "",
-        });
-        setActiveTab("history");
-        fetchReflections();
+
+        if (!success) {
+          throw error || new Error("Failed to create reflection");
+        }
       } else {
-        toast({
-          title: "Error",
-          description: (error as ApiError)?.message || "Failed to create reflection",
-          variant: "destructive",
+        // Add insights if provided
+        const filteredInsights = newReflection.insights.filter(
+          (insight) => insight.trim() !== "",
+        );
+        if (filteredInsights.length > 0) {
+          const insightInserts = filteredInsights.map((content) => ({
+            reflection_id: reflection.id,
+            content,
+          }));
+
+          await supabase.from("reflection_insights").insert(insightInserts);
+        }
+
+        // Add tags if provided
+        if (newReflection.tags && newReflection.tags.length > 0) {
+          const tagInserts = newReflection.tags.map((tag) => ({
+            reflection_id: reflection.id,
+            tag,
+          }));
+
+          await supabase.from("reflection_tags").insert(tagInserts);
+        }
+
+        // Create an activity for the new reflection
+        await supabase.from("growth_activities").insert({
+          user_id: userId,
+          action: "Created reflection",
+          item: newReflection.title,
+          system_id: newReflection.system_id || null,
         });
       }
+
+      toast({
+        title: "Success",
+        description: "Reflection created successfully",
+      });
+      setNewReflection({
+        title: "",
+        content: "",
+        insights: [""],
+        tags: [],
+        cycle_phase: "planning",
+        domain: "professional",
+        system_id: "",
+      });
+      setActiveTab("history");
+      fetchReflections();
     } catch (error) {
       console.error("Error creating reflection:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description:
+          (error as ApiError)?.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
