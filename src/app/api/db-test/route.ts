@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+interface RLSStatus {
+  [key: string]: {
+    hasRLS: boolean | string;
+    error: string | null;
+  };
+}
+
 export async function GET() {
   try {
     // Create a direct Supabase client using service role key for admin access
@@ -39,7 +46,7 @@ export async function GET() {
       "user_cyclo_evolution",
     ];
 
-    const rlsStatus = {};
+    const rlsStatus: RLSStatus = {};
 
     for (const table of tables) {
       const { data: rlsData, error: rlsError } = await supabaseAdmin.rpc(
@@ -69,12 +76,13 @@ export async function GET() {
         hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
       {
         success: false,
         error: "Diagnostic test failed",
-        details: error.message,
+        details: errorMessage,
       },
       { status: 500 },
     );

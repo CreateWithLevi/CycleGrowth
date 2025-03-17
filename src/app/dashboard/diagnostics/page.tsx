@@ -24,9 +24,21 @@ interface EdgeFunctionTest {
   };
 }
 
+interface DiagnosticsResults {
+  success?: boolean;
+  connection?: string;
+  environment?: Record<string, boolean>;
+  rlsStatus?: Record<string, { hasRLS: boolean; error?: string }>;
+  directAccess?: {
+    success: boolean;
+    data?: any;
+    error?: any;
+  };
+}
+
 export default function DiagnosticsPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<DiagnosticsResults | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("database");
@@ -137,7 +149,7 @@ export default function DiagnosticsPage() {
           .from("growth_systems")
           .select("id", { count: "exact" });
 
-        setResults((prev) => ({
+        setResults((prev: DiagnosticsResults | null) => ({
           ...prev,
           directAccess: {
             success: !directError,
@@ -198,16 +210,16 @@ export default function DiagnosticsPage() {
           }
         }
       } catch (directErr) {
-        setResults((prev) => ({
+        setResults((prev: DiagnosticsResults | null) => ({
           ...prev,
           directAccess: {
             success: false,
-            error: directErr.message,
+            error: directErr instanceof Error ? directErr.message : String(directErr),
           },
         }));
       }
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsLoading(false);
     }
@@ -227,16 +239,12 @@ export default function DiagnosticsPage() {
     });
 
     try {
-      // Convert function name to the format expected by Supabase
-      // Convert function name to the format expected by Supabase
-      const functionSlug = `supabase-functions-${func.name.replace(/\//g, "-")}`;
-      console.log(
-        `Invoking function: ${functionSlug} with params:`,
-        func.testParams,
-      );
+      // Function name should not include supabase-functions- prefix as it's added automatically
+      const functionName = func.name;
+      console.log(`Invoking function: ${functionName} with params:`, func.testParams);
 
       // Invoke the edge function
-      const { data, error } = await supabase.functions.invoke(functionSlug, {
+      const { data, error } = await supabase.functions.invoke(functionName, {
         body: func.testParams,
       });
 
@@ -621,7 +629,7 @@ export default function DiagnosticsPage() {
                         });
                       } catch (err) {
                         console.error("Error testing dashboard data:", err);
-                        setDashboardDataError(err.message);
+                        setDashboardDataError(err instanceof Error ? err.message : String(err));
                       } finally {
                         setDashboardDataLoading(false);
                       }
