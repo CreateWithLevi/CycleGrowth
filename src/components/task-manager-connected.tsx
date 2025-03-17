@@ -1,14 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "../../supabase/client";
-import { useToast } from "./ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Check, Clock, Plus, X, Calendar, Tag, ArrowRight } from "lucide-react";
+import {
+  Check,
+  Clock,
+  Plus,
+  X,
+  Calendar,
+  Tag,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
+import { createClient } from "../../supabase/client";
+import { useToast } from "./ui/use-toast";
 
 interface Task {
   id: string;
@@ -21,10 +30,22 @@ interface Task {
   cyclePhase: "planning" | "execution" | "analysis" | "improvement";
 }
 
-export default function TaskManager() {
+export default function TaskManagerConnected() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("all");
+  const [newTask, setNewTask] = useState<Partial<Task>>({
+    title: "",
+    description: "",
+    priority: "medium",
+    status: "todo",
+    tags: [],
+    cyclePhase: "planning",
+  });
+  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+  const [newTag, setNewTag] = useState("");
+  const { toast } = useToast();
   const supabase = createClient();
 
   useEffect(() => {
@@ -80,18 +101,6 @@ export default function TaskManager() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [newTask, setNewTask] = useState<Partial<Task>>({
-    title: "",
-    description: "",
-    priority: "medium",
-    status: "todo",
-    tags: [],
-    cyclePhase: "planning",
-  });
-  const [showNewTaskForm, setShowNewTaskForm] = useState(false);
-  const [newTag, setNewTag] = useState("");
-
   const filteredTasks = tasks.filter((task) => {
     if (activeTab === "all") return true;
     if (activeTab === "today") {
@@ -105,8 +114,6 @@ export default function TaskManager() {
     if (activeTab === "completed") return task.status === "completed";
     return task.cyclePhase === activeTab;
   });
-
-  const { toast } = useToast();
 
   const handleStatusChange = async (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId);
@@ -450,10 +457,17 @@ export default function TaskManager() {
                 </Button>
                 <Button
                   onClick={handleCreateTask}
-                  disabled={!newTask.title}
+                  disabled={!newTask.title || isLoading}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
-                  Create Task
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>Create Task</>
+                  )}
                 </Button>
               </div>
             </div>
@@ -472,7 +486,7 @@ export default function TaskManager() {
           <TabsContent value={activeTab} className="space-y-4">
             {isLoading ? (
               <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
               </div>
             ) : error ? (
               <div className="p-8 text-center border border-red-200 rounded-lg bg-red-50">

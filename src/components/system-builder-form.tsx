@@ -34,16 +34,21 @@ export default function SystemBuilderForm() {
     setIsSubmitting(true);
     setError(null);
 
-    console.log('Submitting form data:', formData);
-
     try {
-      const response = await supabase.functions.invoke(
-        "create-growth-system",
-        {
-          body: formData,
-        });
+      // Convert the path to the function name format expected by Supabase
+      const functionName = "supabase-functions-create-growth-system";
 
-      console.log('Response from Edge Function:', response);
+      console.log("Invoking function:", functionName);
+      const response = await supabase.functions.invoke(functionName, {
+        body: formData,
+      });
+
+      console.log("Function response:", response);
+
+      // Log detailed error information if available
+      if (response.error) {
+        console.error("Function error details:", response.error);
+      }
 
       if (response.error) {
         console.error("Detailed error:", {
