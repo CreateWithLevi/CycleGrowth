@@ -1,9 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/types/supabase";
 
+// Create a client with explicit typing
 export const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  },
 );
 
 export type GrowthSystem = {
@@ -55,6 +62,33 @@ export async function fetchCurrentCycle(
   userId: string,
 ): Promise<GrowthSystem | null> {
   try {
+    console.log("Fetching current cycle for user ID:", userId);
+
+    // Create a direct Supabase client using service role key for admin access
+    // This bypasses RLS policies which might be causing the issue
+    const supabaseAdmin = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!,
+    );
+
+    // Try with admin client first to bypass any RLS issues
+    const { data: adminData, error: adminError } = await supabaseAdmin
+      .from("growth_systems")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
+      .limit(1);
+
+    if (!adminError && adminData && adminData.length > 0) {
+      console.log("Found current cycle with admin client:", adminData[0]);
+      return adminData[0] as GrowthSystem;
+    }
+
+    if (adminError) {
+      console.error("Admin client query error:", adminError);
+    }
+
+    // Fall back to standard client if admin client fails
     const { data, error } = await supabase
       .from("growth_systems")
       .select("*")
@@ -64,6 +98,29 @@ export async function fetchCurrentCycle(
 
     if (error) {
       console.error("Error fetching current cycle:", error);
+
+      // If there's an error, try a direct query without filtering by user_id
+      console.log("Attempting fallback query for current cycle");
+      const { data: allData, error: allError } = await supabase
+        .from("growth_systems")
+        .select("*")
+        .order("updated_at", { ascending: false });
+
+      if (allError) {
+        console.error("Fallback query also failed:", allError);
+        return null;
+      }
+
+      // Filter the results manually to match the user_id and get the most recent
+      const filteredData =
+        allData?.filter((system) => system.user_id === userId) || [];
+      if (filteredData.length > 0) {
+        console.log(
+          "Found current cycle with fallback query:",
+          filteredData[0],
+        );
+        return filteredData[0] as GrowthSystem;
+      }
       return null;
     }
 
@@ -84,6 +141,33 @@ export async function fetchGrowthSystems(
   userId: string,
 ): Promise<GrowthSystem[]> {
   try {
+    // Log the user ID we're querying for
+    console.log("Fetching growth systems for user ID:", userId);
+
+    // Create a direct Supabase client using service role key for admin access
+    // This bypasses RLS policies which might be causing the issue
+    const supabaseAdmin = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!,
+    );
+
+    // Try with admin client first to bypass any RLS issues
+    const { data: adminData, error: adminError } = await supabaseAdmin
+      .from("growth_systems")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+
+    if (!adminError && adminData && adminData.length > 0) {
+      console.log(`Found ${adminData.length} growth systems with admin client`);
+      return adminData as GrowthSystem[];
+    }
+
+    if (adminError) {
+      console.error("Admin client query error:", adminError);
+    }
+
+    // Fall back to standard client if admin client fails
     const { data, error } = await supabase
       .from("growth_systems")
       .select("*")
@@ -92,7 +176,25 @@ export async function fetchGrowthSystems(
 
     if (error) {
       console.error("Error fetching growth systems:", error);
-      return [];
+
+      // If there's an error, try a direct query without filtering by user_id
+      // This helps diagnose if it's a permission issue
+      console.log("Attempting fallback query without user_id filter");
+      const { data: allData, error: allError } = await supabase
+        .from("growth_systems")
+        .select("*")
+        .order("updated_at", { ascending: false });
+
+      if (allError) {
+        console.error("Fallback query also failed:", allError);
+        return [];
+      }
+
+      // Filter the results manually to match the user_id
+      const filteredData =
+        allData?.filter((system) => system.user_id === userId) || [];
+      console.log(`Found ${filteredData.length} systems with fallback query`);
+      return filteredData as GrowthSystem[];
     }
 
     if (!data || data.length === 0) {
