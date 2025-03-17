@@ -54,39 +54,58 @@ export type UserCycloEvolution = {
 export async function fetchCurrentCycle(
   userId: string,
 ): Promise<GrowthSystem | null> {
-  const { data, error } = await supabase
-    .from("growth_systems")
-    .select("*")
-    .eq("user_id", userId)
-    .order("updated_at", { ascending: false })
-    .limit(1);
+  try {
+    const { data, error } = await supabase
+      .from("growth_systems")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false })
+      .limit(1);
 
-  if (error) {
-    console.error("Error fetching current cycle:", error);
+    if (error) {
+      console.error("Error fetching current cycle:", error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      console.log("No growth systems found for user:", userId);
+      return null;
+    }
+
+    console.log("Found current cycle:", data[0]);
+    return data[0] as GrowthSystem;
+  } catch (err) {
+    console.error("Exception in fetchCurrentCycle:", err);
     return null;
   }
-
-  if (!data || data.length === 0) {
-    return null;
-  }
-
-  return data[0] as GrowthSystem;
 }
 
 export async function fetchGrowthSystems(
   userId: string,
 ): Promise<GrowthSystem[]> {
-  const { data, error } = await supabase
-    .from("growth_systems")
-    .select("*")
-    .eq("user_id", userId)
-    .order("updated_at", { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from("growth_systems")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
 
-  if (error || !data) {
+    if (error) {
+      console.error("Error fetching growth systems:", error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      console.log("No growth systems found for user:", userId);
+      return [];
+    }
+
+    console.log(`Found ${data.length} growth systems for user:`, userId);
+    return data as GrowthSystem[];
+  } catch (err) {
+    console.error("Exception in fetchGrowthSystems:", err);
     return [];
   }
-
-  return data as GrowthSystem[];
 }
 
 export async function fetchRecentActivities(

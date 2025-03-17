@@ -218,7 +218,12 @@ export default function DiagnosticsPage() {
 
     try {
       // Convert function name to the format expected by Supabase
+      // Convert function name to the format expected by Supabase
       const functionSlug = `supabase-functions-${func.name.replace(/\//g, "-")}`;
+      console.log(
+        `Invoking function: ${functionSlug} with params:`,
+        func.testParams,
+      );
 
       // Invoke the edge function
       const { data, error } = await supabase.functions.invoke(functionSlug, {

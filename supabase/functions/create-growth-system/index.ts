@@ -100,6 +100,7 @@ serve(async (req) => {
           current_phase: "planning",
           progress: 0,
           start_date: new Date().toISOString(),
+          status: "active",
         })
         .select()
         .single();
