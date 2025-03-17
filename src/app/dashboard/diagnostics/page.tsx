@@ -6,7 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "../../../../supabase/client";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Database } from "lucide-react";
+import {
+  fetchCurrentCycle,
+  fetchGrowthSystems,
+  fetchRecentActivities,
+} from "@/lib/db";
 
 interface EdgeFunctionTest {
   name: string;
@@ -25,6 +30,11 @@ export default function DiagnosticsPage() {
   const [error, setError] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("database");
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardDataLoading, setDashboardDataLoading] = useState(false);
+  const [dashboardDataError, setDashboardDataError] = useState<string | null>(
+    null,
+  );
   const [edgeFunctions, setEdgeFunctions] = useState<EdgeFunctionTest[]>([
     {
       name: "create-growth-system",
@@ -290,6 +300,7 @@ export default function DiagnosticsPage() {
             <TabsList className="mb-6">
               <TabsTrigger value="database">Database Diagnostics</TabsTrigger>
               <TabsTrigger value="edge-functions">Edge Functions</TabsTrigger>
+              <TabsTrigger value="dashboard-data">Dashboard Data</TabsTrigger>
             </TabsList>
 
             <TabsContent value="database" className="grid gap-6">
@@ -533,6 +544,285 @@ export default function DiagnosticsPage() {
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="dashboard-data" className="grid gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="h-5 w-5" /> Dashboard Data Diagnostics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-4 text-gray-600">
+                    This section tests the data fetching functions used by the
+                    dashboard to help diagnose why growth cycles might not be
+                    showing up.
+                  </p>
+
+                  <Button
+                    onClick={async () => {
+                      setDashboardDataLoading(true);
+                      setDashboardDataError(null);
+                      try {
+                        // Get the current user ID
+                        const {
+                          data: { user },
+                        } = await supabase.auth.getUser();
+
+                        if (!user) {
+                          throw new Error("User not authenticated");
+                        }
+
+                        console.log(
+                          "Testing dashboard data fetching for user ID:",
+                          user.id,
+                        );
+
+                        // Test each function used by the dashboard
+                        const currentCycle = await fetchCurrentCycle(user.id);
+                        console.log("Current cycle result:", currentCycle);
+
+                        const growthSystems = await fetchGrowthSystems(user.id);
+                        console.log("Growth systems result:", growthSystems);
+
+                        const recentActivities = await fetchRecentActivities(
+                          user.id,
+                        );
+                        console.log(
+                          "Recent activities result:",
+                          recentActivities,
+                        );
+
+                        // Also test direct database query
+                        const { data: directSystems, error: directError } =
+                          await supabase
+                            .from("growth_systems")
+                            .select("*")
+                            .eq("user_id", user.id);
+
+                        console.log(
+                          "Direct systems query result:",
+                          directSystems,
+                        );
+                        if (directError)
+                          console.error("Direct query error:", directError);
+
+                        // Set all the data for display
+                        setDashboardData({
+                          userId: user.id,
+                          currentCycle,
+                          growthSystems,
+                          recentActivities,
+                          directSystems,
+                          directError,
+                        });
+                      } catch (err) {
+                        console.error("Error testing dashboard data:", err);
+                        setDashboardDataError(err.message);
+                      } finally {
+                        setDashboardDataLoading(false);
+                      }
+                    }}
+                    disabled={dashboardDataLoading}
+                    className="mb-6 bg-purple-600 hover:bg-purple-700"
+                  >
+                    {dashboardDataLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Testing Dashboard Data...
+                      </>
+                    ) : (
+                      "Test Dashboard Data Fetching"
+                    )}
+                  </Button>
+
+                  {dashboardDataError && (
+                    <div className="p-4 bg-red-100 text-red-700 rounded-md mb-4">
+                      <h3 className="font-semibold mb-1">Error:</h3>
+                      <p>{dashboardDataError}</p>
+                    </div>
+                  )}
+
+                  {dashboardData && (
+                    <div className="space-y-6">
+                      <div className="p-4 bg-gray-100 rounded-md">
+                        <h3 className="font-semibold mb-2">User ID</h3>
+                        <p className="font-mono text-sm">
+                          {dashboardData.userId}
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-gray-100 rounded-md">
+                        <h3 className="font-semibold mb-2">
+                          Current Cycle (fetchCurrentCycle)
+                        </h3>
+                        {dashboardData.currentCycle ? (
+                          <pre className="bg-white p-3 rounded border text-xs overflow-auto max-h-60">
+                            {JSON.stringify(
+                              dashboardData.currentCycle,
+                              null,
+                              2,
+                            )}
+                          </pre>
+                        ) : (
+                          <p className="text-amber-600">
+                            No current cycle found
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="p-4 bg-gray-100 rounded-md">
+                        <h3 className="font-semibold mb-2">
+                          Growth Systems (fetchGrowthSystems)
+                        </h3>
+                        {dashboardData.growthSystems &&
+                        dashboardData.growthSystems.length > 0 ? (
+                          <>
+                            <p className="mb-2">
+                              Found {dashboardData.growthSystems.length} growth
+                              systems
+                            </p>
+                            <pre className="bg-white p-3 rounded border text-xs overflow-auto max-h-60">
+                              {JSON.stringify(
+                                dashboardData.growthSystems,
+                                null,
+                                2,
+                              )}
+                            </pre>
+                          </>
+                        ) : (
+                          <p className="text-amber-600">
+                            No growth systems found
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="p-4 bg-gray-100 rounded-md">
+                        <h3 className="font-semibold mb-2">
+                          Direct Database Query (growth_systems)
+                        </h3>
+                        {dashboardData.directError ? (
+                          <p className="text-red-600">
+                            Error: {dashboardData.directError.message}
+                          </p>
+                        ) : dashboardData.directSystems &&
+                          dashboardData.directSystems.length > 0 ? (
+                          <>
+                            <p className="mb-2">
+                              Found {dashboardData.directSystems.length} growth
+                              systems directly
+                            </p>
+                            <pre className="bg-white p-3 rounded border text-xs overflow-auto max-h-60">
+                              {JSON.stringify(
+                                dashboardData.directSystems,
+                                null,
+                                2,
+                              )}
+                            </pre>
+                          </>
+                        ) : (
+                          <p className="text-amber-600">
+                            No growth systems found in direct query
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="p-4 bg-gray-100 rounded-md">
+                        <h3 className="font-semibold mb-2">
+                          Recent Activities (fetchRecentActivities)
+                        </h3>
+                        {dashboardData.recentActivities &&
+                        dashboardData.recentActivities.length > 0 ? (
+                          <>
+                            <p className="mb-2">
+                              Found {dashboardData.recentActivities.length}{" "}
+                              recent activities
+                            </p>
+                            <pre className="bg-white p-3 rounded border text-xs overflow-auto max-h-60">
+                              {JSON.stringify(
+                                dashboardData.recentActivities,
+                                null,
+                                2,
+                              )}
+                            </pre>
+                          </>
+                        ) : (
+                          <p className="text-amber-600">
+                            No recent activities found
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="p-4 bg-purple-50 border border-purple-200 rounded-md">
+                        <h3 className="font-semibold mb-2 text-purple-800">
+                          Diagnostic Summary
+                        </h3>
+                        <ul className="space-y-2 text-sm">
+                          <li>
+                            <strong>Current Cycle Status:</strong>{" "}
+                            {dashboardData.currentCycle ? "Found" : "Not Found"}
+                          </li>
+                          <li>
+                            <strong>Growth Systems Status:</strong>{" "}
+                            {dashboardData.growthSystems &&
+                            dashboardData.growthSystems.length > 0
+                              ? `Found ${dashboardData.growthSystems.length} systems`
+                              : "Not Found"}
+                          </li>
+                          <li>
+                            <strong>Direct Query Status:</strong>{" "}
+                            {dashboardData.directSystems &&
+                            dashboardData.directSystems.length > 0
+                              ? `Found ${dashboardData.directSystems.length} systems`
+                              : "Not Found"}
+                          </li>
+                          <li>
+                            <strong>Recent Activities Status:</strong>{" "}
+                            {dashboardData.recentActivities &&
+                            dashboardData.recentActivities.length > 0
+                              ? `Found ${dashboardData.recentActivities.length} activities`
+                              : "Not Found"}
+                          </li>
+                        </ul>
+
+                        {dashboardData.growthSystems &&
+                          dashboardData.growthSystems.length > 0 &&
+                          !dashboardData.currentCycle && (
+                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
+                              <p className="font-medium">
+                                Possible Issue Detected:
+                              </p>
+                              <p>
+                                Growth systems exist but no current cycle is
+                                being returned. Check if the dashboard is
+                                expecting the most recently updated system to be
+                                the current cycle.
+                              </p>
+                            </div>
+                          )}
+
+                        {dashboardData.directSystems &&
+                          dashboardData.directSystems.length > 0 &&
+                          (!dashboardData.growthSystems ||
+                            dashboardData.growthSystems.length === 0) && (
+                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
+                              <p className="font-medium">
+                                Possible Issue Detected:
+                              </p>
+                              <p>
+                                Systems exist in the database but
+                                fetchGrowthSystems() is not returning them.
+                                Check the fetchGrowthSystems implementation in
+                                db.ts.
+                              </p>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
