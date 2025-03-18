@@ -138,9 +138,20 @@ export default function DiagnosticsPage() {
       } = await supabase.auth.getUser();
       setAuthStatus({ user, error: authError });
 
+      // Check environment variables first
+      const envResponse = await fetch("/api/env-check");
+      const envData = await envResponse.json();
+      console.log("Environment check:", envData);
+
       // Run database diagnostics
       const response = await fetch("/api/db-test");
       const data = await response.json();
+
+      // Merge environment data with results
+      if (envData.environment) {
+        data.environmentDetails = envData.environment;
+      }
+
       setResults(data);
 
       // Test direct database access
@@ -214,7 +225,10 @@ export default function DiagnosticsPage() {
           ...prev,
           directAccess: {
             success: false,
-            error: directErr instanceof Error ? directErr.message : String(directErr),
+            error:
+              directErr instanceof Error
+                ? directErr.message
+                : String(directErr),
           },
         }));
       }
@@ -241,7 +255,10 @@ export default function DiagnosticsPage() {
     try {
       // Function name should not include supabase-functions- prefix as it's added automatically
       const functionName = func.name;
-      console.log(`Invoking function: ${functionName} with params:`, func.testParams);
+      console.log(
+        `Invoking function: ${functionName} with params:`,
+        func.testParams,
+      );
 
       // Invoke the edge function
       const { data, error } = await supabase.functions.invoke(functionName, {
@@ -379,6 +396,20 @@ export default function DiagnosticsPage() {
                         >
                           {results.connection || "Connection failed"}
                         </p>
+                        {results.error && (
+                          <div className="mt-2">
+                            <p className="text-red-600 font-medium">
+                              Error: {results.error}
+                            </p>
+                            {results.details && (
+                              <pre className="mt-1 text-xs bg-red-50 p-2 rounded overflow-auto max-h-32">
+                                {typeof results.details === "object"
+                                  ? JSON.stringify(results.details, null, 2)
+                                  : results.details}
+                              </pre>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div className="p-4 bg-gray-100 rounded-md">
@@ -413,11 +444,58 @@ export default function DiagnosticsPage() {
                               ([key, value]) => (
                                 <li key={key}>
                                   <strong>{key}:</strong>{" "}
-                                  {value ? "✅ Set" : "❌ Missing"}
+                                  {value ? (
+                                    <span className="text-green-600">
+                                      ✅ Set
+                                    </span>
+                                  ) : (
+                                    <span className="text-red-600 font-medium">
+                                      ❌ Missing
+                                    </span>
+                                  )}
                                 </li>
                               ),
                             )}
                         </ul>
+
+                        {results.environmentDetails && (
+                          <div className="mt-4">
+                            <h4 className="font-medium mb-2">
+                              Detailed Environment Info:
+                            </h4>
+                            <div className="text-xs bg-gray-50 p-3 rounded border overflow-auto max-h-60">
+                              <pre>
+                                {JSON.stringify(
+                                  results.environmentDetails,
+                                  null,
+                                  2,
+                                )}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-blue-800 text-sm">
+                          <p className="font-medium">Important:</p>
+                          <p>
+                            Make sure all environment variables are properly set
+                            in your Vercel project settings.
+                          </p>
+                          <p className="mt-1">
+                            The SUPABASE_SERVICE_KEY is especially important for
+                            admin operations and diagnostics.
+                          </p>
+                          {results.environmentDetails?.isVercel && (
+                            <p className="mt-1">
+                              You are running in a Vercel{" "}
+                              {
+                                results.environmentDetails.vercelInfo
+                                  ?.environment
+                              }{" "}
+                              environment.
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       <div className="p-4 bg-gray-100 rounded-md">
@@ -629,7 +707,9 @@ export default function DiagnosticsPage() {
                         });
                       } catch (err) {
                         console.error("Error testing dashboard data:", err);
-                        setDashboardDataError(err instanceof Error ? err.message : String(err));
+                        setDashboardDataError(
+                          err instanceof Error ? err.message : String(err),
+                        );
                       } finally {
                         setDashboardDataLoading(false);
                       }
