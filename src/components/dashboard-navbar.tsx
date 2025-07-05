@@ -23,12 +23,19 @@ import {
   Sparkles,
   Database,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import CycloLogo from "./cyclo-logo";
 
 export default function DashboardNavbar() {
   const supabase = createClient();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const getLinkClass = (href: string) => {
+    return `flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors ${
+      pathname === href ? "text-purple-600 font-bold" : ""
+    }`;
+  };
 
   return (
     <nav className="w-full border-b border-gray-200 bg-white py-4 sticky top-0 z-50">
@@ -46,67 +53,67 @@ export default function DashboardNavbar() {
         <div className="hidden md:flex items-center gap-6">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+            className={getLinkClass("/dashboard")}
           >
             <Home className="h-4 w-4" />
             <span>Dashboard</span>
           </Link>
           <Link
             href="/dashboard/growth-cycles"
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+            className={getLinkClass("/dashboard/growth-cycles")}
           >
             <RefreshCcw className="h-4 w-4" />
             <span>Growth Cycles</span>
           </Link>
           <Link
             href="/dashboard/system-builder"
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+            className={getLinkClass("/dashboard/system-builder")}
           >
             <Target className="h-4 w-4" />
             <span>System Builder</span>
           </Link>
           <Link
             href="/dashboard/knowledge-hub"
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+            className={getLinkClass("/dashboard/knowledge-hub")}
           >
             <Layers className="h-4 w-4" />
             <span>Knowledge Hub</span>
           </Link>
           <Link
             href="/dashboard/tasks"
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+            className={getLinkClass("/dashboard/tasks")}
           >
             <Check className="h-4 w-4" />
             <span>Tasks</span>
           </Link>
           <Link
             href="/dashboard/analytics"
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+            className={getLinkClass("/dashboard/analytics")}
           >
             <LineChart className="h-4 w-4" />
             <span>Analytics</span>
           </Link>
           <Link
             href="/dashboard/reflection"
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+            className={getLinkClass("/dashboard/reflection")}
           >
             <Brain className="h-4 w-4" />
             <span>Reflection</span>
           </Link>
           <Link
             href="/dashboard/cyclo-assistant"
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+            className={getLinkClass("/dashboard/cyclo-assistant")}
           >
             <Sparkles className="h-4 w-4" />
             <span>Cyclo Assistant</span>
           </Link>
-          <Link
+          {/* <Link
             href="/dashboard/diagnostics"
-            className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+            className={getLinkClass("/dashboard/diagnostics")}
           >
             <Database className="h-4 w-4" />
             <span>Diagnostics</span>
-          </Link>
+          </Link> */}
         </div>
 
         <div className="flex gap-4 items-center">
