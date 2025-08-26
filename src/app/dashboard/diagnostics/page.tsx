@@ -27,7 +27,10 @@ interface EdgeFunctionTest {
 interface DiagnosticsResults {
   success?: boolean;
   connection?: string;
+  error?: string;
+  details?: any;
   environment?: Record<string, boolean>;
+  environmentDetails?: any;
   rlsStatus?: Record<string, { hasRLS: boolean; error?: string }>;
   directAccess?: {
     success: boolean;

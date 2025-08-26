@@ -50,7 +50,7 @@ const features = [
   },
 ];
 
-const colorMap = {
+const colorMap: Record<string, { bg: string; text: string; glow: string }> = {
   purple: { bg: "bg-purple-100", text: "text-purple-600", glow: "rgba(139, 69, 255, 0.3)" },
   blue: { bg: "bg-blue-100", text: "text-blue-600", glow: "rgba(59, 130, 246, 0.3)" },
   green: { bg: "bg-green-100", text: "text-green-600", glow: "rgba(34, 197, 94, 0.3)" },

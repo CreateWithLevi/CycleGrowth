@@ -172,7 +172,7 @@ export async function GET() {
       connection: "Connected successfully",
       rlsStatus,
       authSettings: authError
-        ? { error: authError.message || String(authError) }
+        ? { error: (authError as any)?.message || String(authError) }
         : authSettings,
       environment: {
         hasServiceKey: !!process.env.SUPABASE_SERVICE_KEY,
