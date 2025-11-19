@@ -9,6 +9,197 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      cycles: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string | null
+          domain: string
+          status: Database['public']['Enums']['cycle_status']
+          current_stage: Database['public']['Enums']['stage_type'] | null
+          progress: number
+          tasks_completed: number
+          tasks_total: number
+          started_at: string | null
+          completed_at: string | null
+          archived_at: string | null
+          created_at: string
+          updated_at: string
+          metadata: Json
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description?: string | null
+          domain: string
+          status?: Database['public']['Enums']['cycle_status']
+          current_stage?: Database['public']['Enums']['stage_type'] | null
+          progress?: number
+          tasks_completed?: number
+          tasks_total?: number
+          started_at?: string | null
+          completed_at?: string | null
+          archived_at?: string | null
+          created_at?: string
+          updated_at?: string
+          metadata?: Json
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string | null
+          domain?: string
+          status?: Database['public']['Enums']['cycle_status']
+          current_stage?: Database['public']['Enums']['stage_type'] | null
+          progress?: number
+          tasks_completed?: number
+          tasks_total?: number
+          started_at?: string | null
+          completed_at?: string | null
+          archived_at?: string | null
+          created_at?: string
+          updated_at?: string
+          metadata?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cycles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cycle_stages: {
+        Row: {
+          id: string
+          cycle_id: string
+          stage_type: Database['public']['Enums']['stage_type']
+          title: string
+          description: string | null
+          is_completed: boolean
+          completed_at: string | null
+          order_index: number
+          ai_guidance: string | null
+          ai_prompts: Json
+          created_at: string
+          updated_at: string
+          metadata: Json
+        }
+        Insert: {
+          id?: string
+          cycle_id: string
+          stage_type: Database['public']['Enums']['stage_type']
+          title: string
+          description?: string | null
+          is_completed?: boolean
+          completed_at?: string | null
+          order_index?: number
+          ai_guidance?: string | null
+          ai_prompts?: Json
+          created_at?: string
+          updated_at?: string
+          metadata?: Json
+        }
+        Update: {
+          id?: string
+          cycle_id?: string
+          stage_type?: Database['public']['Enums']['stage_type']
+          title?: string
+          description?: string | null
+          is_completed?: boolean
+          completed_at?: string | null
+          order_index?: number
+          ai_guidance?: string | null
+          ai_prompts?: Json
+          created_at?: string
+          updated_at?: string
+          metadata?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cycle_stages_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cyclo_interactions: {
+        Row: {
+          id: string
+          cycle_id: string
+          user_id: string
+          role: Database['public']['Enums']['interaction_role']
+          content: string
+          stage_type: Database['public']['Enums']['stage_type'] | null
+          intent: string | null
+          metadata: Json
+          parent_id: string | null
+          thread_id: string | null
+          model_name: string | null
+          tokens_used: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          cycle_id: string
+          user_id: string
+          role: Database['public']['Enums']['interaction_role']
+          content: string
+          stage_type?: Database['public']['Enums']['stage_type'] | null
+          intent?: string | null
+          metadata?: Json
+          parent_id?: string | null
+          thread_id?: string | null
+          model_name?: string | null
+          tokens_used?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          cycle_id?: string
+          user_id?: string
+          role?: Database['public']['Enums']['interaction_role']
+          content?: string
+          stage_type?: Database['public']['Enums']['stage_type'] | null
+          intent?: string | null
+          metadata?: Json
+          parent_id?: string | null
+          thread_id?: string | null
+          model_name?: string | null
+          tokens_used?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cyclo_interactions_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cyclo_interactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cyclo_interactions_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "cyclo_interactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       growth_activities: {
         Row: {
           action: string
@@ -590,7 +781,18 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      cycle_status: 'planning' | 'active' | 'reflecting' | 'completed' | 'archived'
+      stage_type:
+        | 'planning_define_goals'
+        | 'planning_break_down_tasks'
+        | 'planning_set_milestones'
+        | 'active_execute_tasks'
+        | 'active_track_progress'
+        | 'active_adjust_approach'
+        | 'reflecting_review_outcomes'
+        | 'reflecting_identify_learnings'
+        | 'reflecting_plan_improvements'
+      interaction_role: 'user' | 'assistant' | 'system'
     }
     CompositeTypes: {
       [_ in never]: never
