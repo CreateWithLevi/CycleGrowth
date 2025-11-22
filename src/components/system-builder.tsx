@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
@@ -8,6 +7,7 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Target, RefreshCcw, LineChart, Brain, Plus, X } from "lucide-react";
+import { useBuilderStore } from "@/stores/useBuilderStore";
 
 interface SystemBuilderProps {
   onSave?: (system: any) => void;
@@ -16,58 +16,30 @@ interface SystemBuilderProps {
 export default function SystemBuilder({
   onSave = () => {},
 }: SystemBuilderProps) {
-  const [activeTab, setActiveTab] = useState("details");
-  const [systemName, setSystemName] = useState("");
-  const [systemDescription, setSystemDescription] = useState("");
-  const [domain, setDomain] = useState("personal");
-  const [goals, setGoals] = useState<string[]>([""]);
-  const [tasks, setTasks] = useState<string[]>([""]);
-
-  const handleAddGoal = () => {
-    setGoals([...goals, ""]);
-  };
-
-  const handleRemoveGoal = (index: number) => {
-    const newGoals = [...goals];
-    newGoals.splice(index, 1);
-    setGoals(newGoals);
-  };
-
-  const handleGoalChange = (index: number, value: string) => {
-    const newGoals = [...goals];
-    newGoals[index] = value;
-    setGoals(newGoals);
-  };
-
-  const handleAddTask = () => {
-    setTasks([...tasks, ""]);
-  };
-
-  const handleRemoveTask = (index: number) => {
-    const newTasks = [...tasks];
-    newTasks.splice(index, 1);
-    setTasks(newTasks);
-  };
-
-  const handleTaskChange = (index: number, value: string) => {
-    const newTasks = [...tasks];
-    newTasks[index] = value;
-    setTasks(newTasks);
-  };
+  // Use Zustand store instead of local state
+  const activeTab = useBuilderStore((state) => state.activeTab);
+  const setActiveTab = useBuilderStore((state) => state.setActiveTab);
+  const draftSystem = useBuilderStore((state) => state.draftSystem);
+  const setSystemName = useBuilderStore((state) => state.setSystemName);
+  const setSystemDescription = useBuilderStore(
+    (state) => state.setSystemDescription,
+  );
+  const setDomain = useBuilderStore((state) => state.setDomain);
+  const addGoal = useBuilderStore((state) => state.addGoal);
+  const removeGoal = useBuilderStore((state) => state.removeGoal);
+  const updateGoal = useBuilderStore((state) => state.updateGoal);
+  const addTask = useBuilderStore((state) => state.addTask);
+  const removeTask = useBuilderStore((state) => state.removeTask);
+  const updateTask = useBuilderStore((state) => state.updateTask);
+  const getSystemData = useBuilderStore((state) => state.getSystemData);
 
   const handleSave = () => {
-    const systemData = {
-      name: systemName,
-      description: systemDescription,
-      domain,
-      goals: goals.filter((goal) => goal.trim() !== ""),
-      tasks: tasks.filter((task) => task.trim() !== ""),
-      createdAt: new Date().toISOString(),
-      currentPhase: "planning",
-      progress: 0,
-    };
-
+    const systemData = getSystemData();
     onSave(systemData);
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as any);
   };
 
   const domains = [
@@ -85,7 +57,7 @@ export default function SystemBuilder({
         <CardTitle className="text-2xl">Create Your Growth System</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid grid-cols-4 mb-8">
             <TabsTrigger value="details" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
@@ -112,7 +84,7 @@ export default function SystemBuilder({
                 <Input
                   id="system-name"
                   placeholder="e.g., Professional Skill Development"
-                  value={systemName}
+                  value={draftSystem.name}
                   onChange={(e) => setSystemName(e.target.value)}
                 />
               </div>
@@ -123,7 +95,7 @@ export default function SystemBuilder({
                   id="system-description"
                   placeholder="Describe what you want to achieve with this growth system..."
                   rows={4}
-                  value={systemDescription}
+                  value={draftSystem.description}
                   onChange={(e) => setSystemDescription(e.target.value)}
                 />
               </div>
@@ -133,7 +105,7 @@ export default function SystemBuilder({
                 <select
                   id="domain"
                   className="w-full p-2 border rounded-md"
-                  value={domain}
+                  value={draftSystem.domain}
                   onChange={(e) => setDomain(e.target.value)}
                 >
                   {domains.map((domain) => (
@@ -154,19 +126,19 @@ export default function SystemBuilder({
                   Define what you want to achieve with this growth system
                 </p>
 
-                {goals.map((goal, index) => (
+                {draftSystem.goals.map((goal, index) => (
                   <div key={index} className="flex items-center gap-2 mb-3">
                     <Input
                       placeholder={`Goal ${index + 1}`}
                       value={goal}
-                      onChange={(e) => handleGoalChange(index, e.target.value)}
+                      onChange={(e) => updateGoal(index, e.target.value)}
                       className="flex-1"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleRemoveGoal(index)}
-                      disabled={goals.length === 1}
+                      onClick={() => removeGoal(index)}
+                      disabled={draftSystem.goals.length === 1}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -176,7 +148,7 @@ export default function SystemBuilder({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleAddGoal}
+                  onClick={addGoal}
                   className="mt-2"
                 >
                   <Plus className="h-4 w-4 mr-2" /> Add Goal
@@ -193,19 +165,19 @@ export default function SystemBuilder({
                   Break down your goals into actionable tasks
                 </p>
 
-                {tasks.map((task, index) => (
+                {draftSystem.tasks.map((task, index) => (
                   <div key={index} className="flex items-center gap-2 mb-3">
                     <Input
                       placeholder={`Task ${index + 1}`}
                       value={task}
-                      onChange={(e) => handleTaskChange(index, e.target.value)}
+                      onChange={(e) => updateTask(index, e.target.value)}
                       className="flex-1"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleRemoveTask(index)}
-                      disabled={tasks.length === 1}
+                      onClick={() => removeTask(index)}
+                      disabled={draftSystem.tasks.length === 1}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -215,7 +187,7 @@ export default function SystemBuilder({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleAddTask}
+                  onClick={addTask}
                   className="mt-2"
                 >
                   <Plus className="h-4 w-4 mr-2" /> Add Task
