@@ -1,4 +1,6 @@
 import { TempoInit } from "@/components/tempo-init";
+import { WebVitalsReporter } from "@/components/analytics/web-vitals-reporter";
+import { PerformanceHud } from "@/components/dev/performance-hud";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
@@ -23,6 +25,8 @@ export default function RootLayout({
       <body className={inter.className}>
         {children}
         <TempoInit />
+        <WebVitalsReporter />
+        <PerformanceHud />
       </body>
     </html>
   );
