@@ -114,7 +114,7 @@ const baseItemSchema = z.object({
   title: z.string().min(1, { message: 'Title is required' }).max(100, { message: 'Title must be less than 100 characters' }),
   description: z.string().max(500, { message: 'Description must be less than 500 characters' }).optional(),
   priority: z.enum(['low', 'medium', 'high']),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // Habit schema

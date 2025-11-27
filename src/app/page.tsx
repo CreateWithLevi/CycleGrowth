@@ -3,25 +3,18 @@ import Footer from "@/components/footer";
 import PricingCard from "@/components/pricing-card";
 import { createClient } from "../../supabase/server";
 import {
-  ArrowUpRight,
-  RefreshCcw,
-  Brain,
-  Target,
-  LineChart,
-  Sparkles,
+  ArrowRight,
   Check,
+  Sparkles,
   Zap,
   Lightbulb,
   Layers,
+  Target,
+  TrendingUp,
+  BarChart3,
 } from "lucide-react";
 import Link from "next/link";
-import CycloLogo from "@/components/cyclo-logo";
-import { MeshGradient, DotOrbit } from "@paper-design/shaders-react";
-import AnimatedHero from "@/components/animated-hero";
-import AnimatedHowItWorks from "@/components/animated-how-it-works";
-import AnimatedFeatures from "@/components/animated-features";
-import AnimatedFreeVsPaid from "@/components/animated-free-vs-paid";
-import AnimatedCTA from "@/components/animated-cta";
+import { Button } from "@/components/ui/button";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -34,146 +27,171 @@ export default async function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-black pt-24 pb-32">
-        {/* Paper Shaders Background */}
-        <div className="absolute inset-0">
-          {/* Primary MeshGradient Layer */}
-          <MeshGradient
-            colors={['#000000', '#5100ff', '#00ff80', '#ffffff']}
-            distortion={1}
-            swirl={0.8}
-            speed={0.3}
-            style={{
-              width: '100%',
-              height: '100%',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-            }}
-          />
-          {/* Wireframe MeshGradient Layer */}
-          <MeshGradient
-            colors={['#000000', '#ea00ff', '#ffcc00', '#5100ff']}
-            distortion={0.8}
-            swirl={1.0}
-            speed={0.2}
-            style={{
-              width: '100%',
-              height: '100%',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              opacity: 0.6,
-            }}
-          />
+      {/* Hero Section - Linear Style */}
+      <section className="relative overflow-hidden border-b">
+        <div className="container mx-auto px-4 py-32 sm:py-40">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-muted/50 text-sm font-medium">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Powered by AI
+            </div>
+            <h1 className="text-5xl sm:text-7xl font-bold tracking-tight">
+              Growth through
+              <span className="block text-primary mt-2">intelligent cycles</span>
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              CycleGrowth combines AI-powered guidance with proven frameworks to help you
+              plan, execute, and reflect on your personal growth journey.
+            </p>
+            <div className="flex items-center justify-center gap-4 pt-4">
+              <Link href={user ? "/dashboard" : "/sign-up"}>
+                <Button size="lg" className="text-base px-8">
+                  {user ? "Go to Dashboard" : "Get Started Free"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="#features">
+                <Button variant="outline" size="lg" className="text-base px-8">
+                  Learn More
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
 
-        <AnimatedHero />
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
       </section>
 
-      <AnimatedHowItWorks />
-
-      {/* Cyclo Evolution Section */}
-      <section className="py-20 relative overflow-hidden bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white">
-        {/* Elegant MeshGradient Background */}
-        <div className="absolute inset-0">
-          <MeshGradient
-            colors={['#1a0b2e', '#7c3aed', '#2563eb', '#0f172a']}
-            distortion={0.6}
-            swirl={0.4}
-            speed={0.1}
-            style={{
-              width: '100%',
-              height: '100%',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              opacity: 0.7,
-            }}
-          />
-          {/* Subtle overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-transparent" />
-        </div>
-        <div className="container mx-auto px-4 relative">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Cyclo Evolves With You</h2>
-            <p className="text-gray-200 max-w-2xl mx-auto">
-              As you progress through your growth cycles, Cyclo evolves to
-              provide increasingly personalized guidance.
+      {/* How It Works - Simplified Linear Style */}
+      <section className="py-24 border-b" id="features">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              Built for sustainable growth
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              A systematic approach to personal development that evolves with you.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
               {
-                stage: "Stage 1",
-                title: "Seed Cyclo",
+                icon: <Target className="h-8 w-8" />,
+                title: "Plan with purpose",
                 description:
-                  "Basic guidance with template suggestions and fundamental growth principles to help you get started.",
-                icon: <Sparkles className="w-6 h-6" />,
-                price: "$10/month",
+                  "Define clear goals and break them down into actionable tasks with AI-powered suggestions.",
               },
               {
-                stage: "Stage 2",
-                title: "Growth Cyclo",
+                icon: <TrendingUp className="h-8 w-8" />,
+                title: "Execute with confidence",
                 description:
-                  "Personalized insights based on your progress data, with pattern recognition and basic insight generation.",
-                icon: <Zap className="w-6 h-6" />,
-                price: "$15/month",
+                  "Track progress, maintain momentum, and adapt your approach based on real-time insights.",
               },
               {
-                stage: "Stage 3",
-                title: "Bloom Cyclo",
+                icon: <BarChart3 className="h-8 w-8" />,
+                title: "Reflect and improve",
                 description:
-                  "Advanced recommendations with proactive optimization suggestions and advanced analytics capabilities.",
-                icon: <Lightbulb className="w-6 h-6" />,
-                price: "$20/month",
+                  "Review outcomes, identify patterns, and continuously refine your growth strategy.",
               },
-              {
-                stage: "Stage 4",
-                title: "Wisdom Cyclo",
-                description:
-                  "Expert assistance with cross-domain insights and predictive analysis to anticipate challenges before they arise.",
-                icon: <Layers className="w-6 h-6" />,
-                price: "$25/month",
-              },
-            ].map((stage, index) => (
-              <div
-                key={index}
-                className="p-6 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all"
-              >
-                <div className="text-white/80 mb-2">{stage.stage}</div>
-                <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                  {stage.icon} {stage.title}
-                </h3>
-                <p className="text-gray-200 mb-4">{stage.description}</p>
-                <div className="text-white font-medium">{stage.price}</div>
+            ].map((feature, index) => (
+              <div key={index} className="space-y-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 text-primary">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold">{feature.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <AnimatedFreeVsPaid />
-
-      <AnimatedFeatures />
-
-      {/* Pricing Section */}
-      <section className="py-24 bg-white" id="pricing">
+      {/* Cyclo Evolution - Linear Minimal */}
+      <section className="py-24 bg-muted/30 border-b">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">
-              Simple, Transparent Pricing
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              Cyclo evolves with you
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Choose the perfect plan for your growth journey. No hidden fees.
+            <p className="text-lg text-muted-foreground">
+              Your AI assistant gets smarter as you progress through your growth cycles,
+              providing increasingly personalized guidance.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                stage: "Stage 1",
+                title: "Seed Cyclo",
+                description:
+                  "Template suggestions and fundamental growth principles to get you started.",
+                icon: <Sparkles className="h-6 w-6" />,
+                price: "$10/mo",
+              },
+              {
+                stage: "Stage 2",
+                title: "Growth Cyclo",
+                description:
+                  "Personalized insights with pattern recognition based on your progress data.",
+                icon: <Zap className="h-6 w-6" />,
+                price: "$15/mo",
+              },
+              {
+                stage: "Stage 3",
+                title: "Bloom Cyclo",
+                description:
+                  "Proactive optimization suggestions with advanced analytics capabilities.",
+                icon: <Lightbulb className="h-6 w-6" />,
+                price: "$20/mo",
+              },
+              {
+                stage: "Stage 4",
+                title: "Wisdom Cyclo",
+                description:
+                  "Cross-domain insights and predictive analysis to anticipate challenges.",
+                icon: <Layers className="h-6 w-6" />,
+                price: "$25/mo",
+              },
+            ].map((stage, index) => (
+              <div
+                key={index}
+                className="p-6 bg-background rounded-xl border hover:border-primary/50 transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+                  {stage.icon}
+                  <span>{stage.stage}</span>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{stage.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {stage.description}
+                </p>
+                <div className="text-base font-semibold">{stage.price}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing - Clean Grid */}
+      <section className="py-24 border-b" id="pricing">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Choose the plan that fits your growth journey. Upgrade as Cyclo evolves.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {plans?.map((item: any) => (
               <PricingCard key={item.id} item={item} user={user} />
             ))}
@@ -181,80 +199,82 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Transparency Section */}
-      <section className="py-20 bg-gray-50">
+      {/* Trust & Transparency */}
+      <section className="py-24 bg-muted/30 border-b">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Transparency & Trust</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              We believe in complete transparency and user ownership of data and
-              growth.
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+              Built on transparency
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Your data, your growth, your control.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-xl font-semibold mb-4">Cost Transparency</h3>
-              <ul className="space-y-3 text-gray-600">
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Clear breakdown of pricing</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Explanation of evolution rationale</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Regular development updates</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-xl font-semibold mb-4">
-                User Data & Ownership
-              </h3>
-              <ul className="space-y-3 text-gray-600">
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Complete data portability</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Clear data usage policies</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>User ownership of all content</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-xl font-semibold mb-4">
-                Community Governance
-              </h3>
-              <ul className="space-y-3 text-gray-600">
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>User feedback channels</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Transparent roadmap</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span>Community template voting</span>
-                </li>
-              </ul>
-            </div>
+            {[
+              {
+                title: "Cost Transparency",
+                items: [
+                  "Clear pricing breakdown",
+                  "Evolution rationale explained",
+                  "Regular development updates",
+                ],
+              },
+              {
+                title: "Data Ownership",
+                items: [
+                  "Complete data portability",
+                  "Clear usage policies",
+                  "You own all your content",
+                ],
+              },
+              {
+                title: "Community Driven",
+                items: [
+                  "Open feedback channels",
+                  "Transparent roadmap",
+                  "Community voting on features",
+                ],
+              },
+            ].map((section, index) => (
+              <div key={index} className="space-y-4">
+                <h3 className="text-xl font-semibold">{section.title}</h3>
+                <ul className="space-y-3">
+                  {section.items.map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-muted-foreground">
+                      <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <AnimatedCTA />
+      {/* CTA - Minimal */}
+      <section className="py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Start your growth journey today
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Join thousands of people using CycleGrowth to achieve their goals.
+            </p>
+            <div className="pt-4">
+              <Link href={user ? "/dashboard" : "/sign-up"}>
+                <Button size="lg" className="text-base px-8">
+                  {user ? "Go to Dashboard" : "Get Started Free"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </div>

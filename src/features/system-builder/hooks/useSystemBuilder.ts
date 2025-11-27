@@ -177,7 +177,7 @@ export const useSystemBuilder = () => {
           itemIds: zone.items.map(item => item.id),
         })),
         items: allItems,
-      },
+      } as any,
     };
   }, [store]);
 

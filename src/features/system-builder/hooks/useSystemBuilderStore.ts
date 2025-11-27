@@ -107,13 +107,14 @@ export const useSystemBuilderStore = create<SystemBuilderStore>()(
       updateItem: (id, updates) =>
         set(
           (state) => ({
+            ...state,
             availableItems: state.availableItems.map((item) =>
-              item.id === id ? { ...item, ...updates } : item
+              item.id === id ? ({ ...item, ...updates } as any) : item
             ),
             dropZones: state.dropZones.map((zone) => ({
               ...zone,
               items: zone.items.map((item) =>
-                item.id === id ? { ...item, ...updates } : item
+                item.id === id ? ({ ...item, ...updates } as any) : item
               ),
             })),
             isDirty: true,
@@ -125,6 +126,7 @@ export const useSystemBuilderStore = create<SystemBuilderStore>()(
       removeItem: (id) =>
         set(
           (state) => ({
+            ...state,
             availableItems: state.availableItems.filter((item) => item.id !== id),
             dropZones: state.dropZones.map((zone) => ({
               ...zone,

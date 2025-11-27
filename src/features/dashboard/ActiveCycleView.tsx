@@ -111,49 +111,42 @@ export const ActiveCycleView: React.FC<ActiveCycleViewProps> = ({
     .slice(0, 5); // Show max 5 upcoming
 
   return (
-    <div className={cn('space-y-6', className)}>
-      {/* Dynamic Header */}
-      <div className="rounded-lg bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 p-6">
-        <div className="flex items-start gap-3">
-          <Sparkles className="h-6 w-6 text-primary mt-1 flex-shrink-0" />
-          <div>
-            <h1 className="text-2xl font-bold mb-2">
-              Hello {userName},
-              {suggestedTask && cycle.status === 'active' && (
-                <>
-                  {' '}
-                  Cyclo suggests we focus on{' '}
-                  <span className="text-primary">"{suggestedTask.title}"</span> today based on
-                  your goals.
-                </>
-              )}
-              {cycle.status === 'planning' && (
-                <>
-                  {' '}
-                  let's finish planning your <span className="text-primary">"{cycle.title}"</span>{' '}
-                  cycle.
-                </>
-              )}
-              {cycle.status === 'reflecting' && (
-                <>
-                  {' '}
-                  time to reflect on your <span className="text-primary">"{cycle.title}"</span>{' '}
-                  journey.
-                </>
-              )}
-            </h1>
-            <p className="text-muted-foreground">
-              {cycle.status === 'planning' &&
-                'Complete your planning stages to activate your cycle.'}
-              {cycle.status === 'active' &&
-                `You've completed ${cycle.tasks_completed} of ${cycle.tasks_total} tasks. Keep up the momentum!`}
-              {cycle.status === 'reflecting' &&
-                'Review your outcomes and identify key learnings to improve your next cycle.'}
-              {cycle.status === 'completed' &&
-                'Congratulations on completing this cycle! Ready to start a new one?'}
-            </p>
-          </div>
+    <div className={cn('space-y-8', className)}>
+      {/* Linear-inspired Dynamic Header */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium text-primary">Active Cycle</span>
         </div>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+          Hello {userName}
+          {suggestedTask && cycle.status === 'active' && (
+            <span className="text-muted-foreground font-normal">
+              {', '}Cyclo suggests we focus on{' '}
+              <span className="text-foreground">"{suggestedTask.title}"</span>
+            </span>
+          )}
+          {cycle.status === 'planning' && (
+            <span className="text-muted-foreground font-normal">
+              {', '}let's finish planning your <span className="text-foreground">"{cycle.title}"</span>
+            </span>
+          )}
+          {cycle.status === 'reflecting' && (
+            <span className="text-muted-foreground font-normal">
+              {', '}time to reflect on your <span className="text-foreground">"{cycle.title}"</span>
+            </span>
+          )}
+        </h1>
+        <p className="text-base text-muted-foreground max-w-2xl">
+          {cycle.status === 'planning' &&
+            'Complete your planning stages to activate your cycle.'}
+          {cycle.status === 'active' &&
+            `You've completed ${cycle.tasks_completed} of ${cycle.tasks_total} tasks. Keep up the momentum!`}
+          {cycle.status === 'reflecting' &&
+            'Review your outcomes and identify key learnings to improve your next cycle.'}
+          {cycle.status === 'completed' &&
+            'Congratulations on completing this cycle! Ready to start a new one?'}
+        </p>
       </div>
 
       {/* Progress Widget */}
