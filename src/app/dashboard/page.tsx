@@ -3,8 +3,7 @@ import { createClient } from "../../../supabase/server";
 import { redirect } from "next/navigation";
 import { SubscriptionCheck } from "@/components/subscription-check";
 import { fetchActiveCycle } from "@/features/dashboard";
-import { ActiveCycleView } from "@/features/dashboard";
-import { completeTask, checkInTask } from "./actions";
+import DashboardClient from "./dashboard-client";
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -31,21 +30,7 @@ export default async function Dashboard() {
         {/* Linear-inspired main content */}
         <main className="w-full">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl">
-            <ActiveCycleView
-              data={activeCycleData}
-              userName={userName}
-              onCompleteTask={async (taskId: string) => {
-                'use server';
-                await completeTask(taskId);
-              }}
-              onCheckInTask={async (taskId: string) => {
-                'use server';
-                await checkInTask(taskId);
-              }}
-              onCreateCycle={() => {
-                redirect('/dashboard/system-builder');
-              }}
-            />
+            <DashboardClient data={activeCycleData} userName={userName} />
           </div>
         </main>
       </div>
